@@ -96,6 +96,11 @@ body {
   .button-primary { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-transparent bg-brand px-4 py-2 text-sm font-semibold text-slate-950 shadow-sm shadow-emerald-950/50 transition-colors hover:bg-emerald-300 active:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-brand; }
   .button-secondary { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-line-strong bg-surface-raised/60 px-4 py-2 text-sm font-medium text-slate-200 transition-colors hover:border-slate-600 hover:bg-surface-raised hover:text-slate-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-surface-raised/60; }
   .icon-button { @apply inline-flex size-10 shrink-0 items-center justify-center rounded-lg border border-line-strong bg-surface-raised/60 text-slate-200 transition-colors hover:border-slate-600 hover:bg-surface-raised hover:text-slate-50; }
+  /* Processed-frame scrubber; --fill is the share of frames before the current one. */
+  .frame-scrubber { @apply h-2 cursor-pointer rounded-full disabled:cursor-not-allowed disabled:opacity-50; appearance: none;
+    background: linear-gradient(to right, var(--color-emerald-400) var(--fill, 0%), var(--color-slate-700) var(--fill, 0%)); }
+  .frame-scrubber::-webkit-slider-thumb { @apply size-4 rounded-full border-2 border-slate-950 bg-emerald-300 shadow; appearance: none; }
+  .frame-scrubber::-moz-range-thumb { @apply size-4 rounded-full border-2 border-slate-950 bg-emerald-300 shadow; }
   .progress-bar { @apply h-2 w-full overflow-hidden rounded-full bg-slate-800; appearance: none; }
   .progress-bar::-webkit-progress-bar { @apply bg-slate-800; }
   .progress-bar::-webkit-progress-value { @apply rounded-full bg-emerald-400; }

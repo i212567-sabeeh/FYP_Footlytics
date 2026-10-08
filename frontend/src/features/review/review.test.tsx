@@ -7,6 +7,7 @@ import { setAccessToken } from '../auth/tokenStorage'
 import type { Role, User } from '../auth/types'
 import type { FootballMatch } from '../football/types'
 import type { MatchVideo, ProcessingJob } from '../media/types'
+import { frameAt, frameRange, isProcessedFrame, positionOf } from './frames'
 import type { DetectionReviewSummary, TrackingReviewSummary } from './types'
 
 // Synthetic API/image fixtures only. Backend review tests decode and annotate real frames.
@@ -176,5 +177,140 @@ describe('detection and tracking review', () => {
     expect(await screen.findByRole('article', { name: 'Player detection job 3' })).toBeVisible()
     expect(await screen.findByRole('article', { name: 'Player tracking job 4' })).toBeVisible()
     expect(screen.queryByRole('article', { name: 'Video preparation job 3' })).not.toBeInTheDocument()
+  })
+})
+
+describe('review workspace frame navigation and processing', () => {
+  const trackingPanel = () => panel('Player Tracking')
+  const caption = (frame: number) => `Frame ${frame} at ${(frame / 30).toFixed(3)} s · 640 × 480 pixels`
+  const requestedFrames = () => fetchMock.mock.calls.filter(([url]) => String(url).includes('/tracking/preview'))
+    .map(([url]) => new URL(String(url), 'http://localhost').searchParams.get('frame_number'))
+  const loaded = async () => { await screen.findByRole('img', { name: 'Player tracking preview' }); await screen.findByRole('img', { name: 'Player detection preview' }) }
+  const region = async (name: string) => within(await screen.findByRole('region', { name }))
+
+  it('keeps processed-frame arithmetic offset-correct and inside the saved range', () => {
+    const range = frameRange({ first_frame: 3, last_frame: 23, frame_stride: 5 })!
+    expect(range.count).toBe(5)
+    expect([frameAt(range, -4), frameAt(range, 2), frameAt(range, 99)]).toEqual([3, 13, 23])
+    expect([8, 9, 23, 28, 0].map((frame) => isProcessedFrame(range, frame))).toEqual([true, false, true, false, false])
+    expect(positionOf(range, 18)).toBe(3)
+    expect(frameRange({ first_frame: 0, last_frame: 27, frame_stride: 2 })).toBeNull()
+    expect(frameRange({ first_frame: 0, last_frame: 10, frame_stride: 0 })).toBeNull()
+  })
+  it('respects the first and last processed frames', async () => {
+    renderPage(); await loaded()
+    expect(trackingPanel().getByRole('button', { name: 'Previous frame' })).toBeDisabled()
+    expect(trackingPanel().getByRole('button', { name: 'First processed frame' })).toBeDisabled()
+    fireEvent.click(trackingPanel().getByRole('button', { name: 'Last processed frame' }))
+    expect(await trackingPanel().findByText(caption(28))).toBeVisible()
+    expect(trackingPanel().getByRole('button', { name: 'Next frame' })).toBeDisabled()
+    expect(trackingPanel().getByText('Processed frame 15 of 15')).toBeVisible()
+    expect(requestedFrames()).toEqual([null, '28'])
+  })
+  it('maps the scrubber and typed frames to the sampling stride', async () => {
+    renderPage(); await loaded()
+    const slider = trackingPanel().getByRole('slider', { name: 'Player tracking frame position' })
+    expect(slider).toHaveAttribute('max', '14')
+    fireEvent.change(slider, { target: { value: '5' } })
+    expect(await trackingPanel().findByText(caption(10))).toBeVisible()
+    const input = trackingPanel().getByLabelText('Processed frame')
+    fireEvent.change(input, { target: { value: '3' } }); fireEvent.submit(input.closest('form')!)
+    expect(trackingPanel().getByText('Choose a processed frame from 0 to 28, in steps of 2.')).toBeVisible()
+    fireEvent.change(input, { target: { value: '4' } }); fireEvent.submit(input.closest('form')!)
+    expect(await trackingPanel().findByText(caption(4))).toBeVisible()
+    expect(requestedFrames()).toEqual([null, '10', '4'])
+  })
+  it('steps with keys on the focused controls, coalescing bursts and leaving typing alone', async () => {
+    renderPage(); await loaded()
+    const next = trackingPanel().getByRole('button', { name: 'Next frame' })
+    for (let i = 0; i < 3; i++) fireEvent.keyDown(next, { key: 'ArrowRight' })
+    expect(await trackingPanel().findByText(caption(6))).toBeVisible()
+    expect(requestedFrames()).toEqual([null, '6'])
+    fireEvent.keyDown(next, { key: 'End' })
+    expect(await trackingPanel().findByText(caption(28))).toBeVisible()
+    fireEvent.keyDown(trackingPanel().getByLabelText('Processed frame'), { key: 'ArrowLeft' })
+    fireEvent.keyDown(trackingPanel().getByRole('button', { name: 'Previous frame' }), { key: 'ArrowLeft', ctrlKey: true })
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(requestedFrames()).toEqual([null, '6', '28'])
+    fireEvent.keyDown(trackingPanel().getByRole('button', { name: 'Previous frame' }), { key: 'Home' })
+    expect(await trackingPanel().findByText(caption(0))).toBeVisible()
+  })
+  it('cancels an obsolete frame request and never shows its image', async () => {
+    const signals: AbortSignal[] = []
+    let releaseOld!: () => void
+    fetchMock.mockImplementation((input, options) => {
+      if (String(input).includes('/tracking/preview') && String(input).includes('frame_number=2')) {
+        signals.push(options!.signal!)
+        return new Promise((resolve) => { releaseOld = () => resolve(frameResponse(2, true)) })
+      }
+      return defaultApi(input, options)
+    })
+    renderPage(); await loaded()
+    fireEvent.click(trackingPanel().getByRole('button', { name: 'Next frame' }))
+    await waitFor(() => expect(signals).toHaveLength(1))
+    expect(trackingPanel().getByText('Loading frame 2…')).toBeVisible()
+    expect(trackingPanel().queryByRole('img', { name: 'Player tracking preview' })).not.toBeInTheDocument()
+    fireEvent.click(trackingPanel().getByRole('button', { name: 'Next frame' }))
+    expect(await trackingPanel().findByText(caption(4))).toBeVisible()
+    expect(signals[0]!.aborted).toBe(true)
+    releaseOld()
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    expect(trackingPanel().getByText(caption(4))).toBeVisible()
+  })
+  it('revokes each replaced preview URL and the rest on departure', async () => {
+    const page = renderPage(); await loaded()
+    fireEvent.click(trackingPanel().getByRole('button', { name: 'Next frame' }))
+    await trackingPanel().findByText(caption(2))
+    fireEvent.click(trackingPanel().getByRole('button', { name: 'Full resolution' }))
+    expect(trackingPanel().getByRole('region', { name: 'Player tracking frame at full resolution' })).toBeVisible()
+    expect(createObjectURL).toHaveBeenCalledTimes(3)
+    expect(revokeObjectURL).toHaveBeenCalledTimes(1)
+    page.unmount()
+    expect(revokeObjectURL.mock.calls.map(([url]) => url).sort()).toEqual(createObjectURL.mock.results.map((result) => result.value).sort())
+  })
+  it('treats results from a replaced video as out of date without loading their previews', async () => {
+    state.tracking = { ...tracking, video_id: 9 }
+    renderPage()
+    expect(await screen.findByText('The saved player tracking results are out of date.')).toBeVisible()
+    expect(screen.getByText('These results belong to a replaced video. Run tracking again for the current video.')).toBeVisible()
+    await screen.findByRole('img', { name: 'Player detection preview' })
+    expect(requestedFrames()).toEqual([])
+  })
+  it('recovers from a failed preview with Try again', async () => {
+    let failures = 1
+    fetchMock.mockImplementation((input, options) => String(input).includes('/detections/preview') && failures-- > 0
+      ? Promise.resolve(json({ detail: 'The saved preview observations are invalid or unavailable.' }, 409)) : defaultApi(input, options))
+    renderPage()
+    expect(await (await region('Player Detection')).findByText('The saved preview observations are invalid or unavailable.')).toBeVisible()
+    expect(panel('Player Detection').queryByRole('img', { name: 'Player detection preview' })).not.toBeInTheDocument()
+    fireEvent.click(panel('Player Detection').getByRole('button', { name: 'Try again' }))
+    expect(await panel('Player Detection').findByRole('img', { name: 'Player detection preview' })).toBeVisible()
+  })
+  it('lets read-only roles navigate frames without processing controls', async () => {
+    state.role = 'club_management'
+    renderPage(); await loaded()
+    expect(screen.queryByRole('button', { name: /^(Run|Retry)/ })).not.toBeInTheDocument()
+    fireEvent.click(trackingPanel().getByRole('button', { name: 'Next frame' }))
+    expect(await trackingPanel().findByText(caption(2))).toBeVisible()
+  })
+  it('shows a failed attempt and retries it through the existing job API', async () => {
+    state.jobs = [{ ...job, id: 7, job_type: 'player_tracking', status: 'failed', progress_percent: 40, current_stage: 'tracking_players',
+      error_message: 'Tracking stopped. Retry the job.', retry_count: 1 }, job]
+    renderPage()
+    expect(await (await region('Player Tracking')).findByText('Tracking stopped. Retry the job.')).toBeVisible()
+    expect(trackingPanel().getByText('40% · Retries: 1')).toBeVisible()
+    expect(trackingPanel().getByText('Stage: tracking players')).toBeVisible()
+    const retry = trackingPanel().getByRole('button', { name: 'Retry Player Tracking job 7' })
+    await waitFor(() => expect(retry).toBeEnabled())
+    fireEvent.click(retry)
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url, options]) => String(url).endsWith('/jobs/7/retry') && options?.method === 'POST')).toBe(true))
+  })
+  it('shows running progress and blocks new runs while a job is active', async () => {
+    state.jobs = [{ ...job, id: 8, status: 'running', progress_percent: 55, current_stage: 'detecting_players' }, { ...job, id: 4, job_type: 'player_tracking' }]
+    renderPage()
+    expect(await (await region('Player Detection')).findByRole('progressbar', { name: 'Player Detection progress' })).toHaveAttribute('value', '55')
+    expect(screen.getAllByText('A processing job is queued or running.')).toHaveLength(2)
+    expect(screen.getByRole('button', { name: 'Run detection' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Run tracking' })).toBeDisabled()
   })
 })

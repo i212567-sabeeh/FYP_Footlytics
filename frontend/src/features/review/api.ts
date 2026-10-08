@@ -35,7 +35,7 @@ export async function loadReviewFrame(matchId: number, kind: ReviewKind, summary
     || headerNumber(headers, 'X-Job-Id') !== summary.job_id
     || Date.parse(headers.get('X-Job-Updated-At') ?? '') !== Date.parse(summary.job_updated_at)
     || width !== summary.frame_width || height !== summary.frame_height
-    || number < summary.first_frame || number > summary.last_frame || number % summary.frame_stride !== 0
+    || number < summary.first_frame || number > summary.last_frame || (number - summary.first_frame) % summary.frame_stride !== 0
     || (frame !== null && number !== frame)) {
     throw new Error('The source or results changed. Refresh the review before loading another frame.')
   }
