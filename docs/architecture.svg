@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1090" viewBox="0 0 1200 1090" role="img" aria-label="FOOTLYTICS layered system architecture"><title>FOOTLYTICS layered system architecture</title><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#466178"/></marker><marker id="back" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#466178"/></marker></defs><rect width="100%" height="100%" fill="white"/><g font-family="Arial, Helvetica, sans-serif">
+<text x="600" y="43" font-size="30" font-weight="bold" fill="#22364a" text-anchor="middle">FOOTLYTICS · SYSTEM ARCHITECTURE</text>
+<text x="600" y="91" font-size="20" font-weight="normal" fill="#22364a" text-anchor="middle">User · Coach / Analyst / Management / Player / Admin</text>
+<path d="M 600 104 V 145" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<rect x="160" y="148" width="880" height="112" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="184" y="183" font-size="22" font-weight="bold" fill="#22364a" text-anchor="start">PRESENTATION LAYER</text>
+<text x="184" y="214" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">React · TypeScript · Vite · Router · TanStack Query</text>
+<text x="184" y="242" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">Domain pages · Calibration &amp; review · Analytics · Reports</text>
+<path d="M 600 260 V 317" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)" marker-start="url(#back)"/>
+<text x="620" y="294" font-size="18" font-weight="normal" fill="#22364a" text-anchor="start">REST + JWT · job-status polling</text>
+<rect x="160" y="320" width="880" height="128" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="184" y="355" font-size="22" font-weight="bold" fill="#22364a" text-anchor="start">API &amp; APPLICATION SERVICES</text>
+<text x="184" y="386" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">FastAPI · Pydantic · Authentication / RBAC · Club scope</text>
+<text x="184" y="414" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">Domain services · Input version guards · Protected results / downloads</text>
+<text x="184" y="442" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">Job creation &amp; retry · short database transactions</text>
+<path d="M 280 448 V 508" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)" marker-start="url(#back)"/>
+<text x="65" y="482" font-size="18" font-weight="normal" fill="#22364a" text-anchor="start">SQLAlchemy + Alembic</text>
+<path d="M 890 448 V 508" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="648" y="481" font-size="18" font-weight="normal" fill="#22364a" text-anchor="start">Job ID + attempt · JSON</text>
+<rect x="60" y="512" width="480" height="116" rx="14" fill="#f0f3fb" stroke="#2e5266" stroke-width="2"/>
+<text x="84" y="547" font-size="22" font-weight="bold" fill="#22364a" text-anchor="start">DATABASE LAYER</text>
+<text x="84" y="578" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">SQLite: accounts, matches, job metadata</text>
+<text x="84" y="606" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">PostgreSQL: intended, not live-verified</text>
+<rect x="660" y="512" width="480" height="116" rx="14" fill="#fff6e8" stroke="#2e5266" stroke-width="2"/>
+<text x="684" y="547" font-size="22" font-weight="bold" fill="#22364a" text-anchor="start">JOB QUEUE</text>
+<text x="684" y="578" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">Redis + RQ · video-processing</text>
+<text x="684" y="606" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">Durable status in DB · separate execution</text>
+<path d="M 280 628 V 702" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)" marker-start="url(#back)"/>
+<text x="302" y="667" font-size="18" font-weight="normal" fill="#22364a" text-anchor="start">Metadata / status</text>
+<path d="M 890 628 V 702" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="650" y="662" font-size="18" font-weight="normal" fill="#22364a" text-anchor="start">RQ worker consumes IDs</text>
+<rect x="160" y="706" width="880" height="142" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="184" y="741" font-size="22" font-weight="bold" fill="#22364a" text-anchor="start">CV / ANALYTICS / REPORT WORKER</text>
+<text x="184" y="772" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">Separate Linux / WSL Python process · CPU supported; CUDA optional</text>
+<text x="184" y="800" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">YOLO · ByteTrack · jersey evidence · homography · trajectory cleaning</text>
+<text x="184" y="828" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">Player &amp; team analytics · ReportLab PDF · CSV exports</text>
+<path d="M 480 848 V 892" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="500" y="868" font-size="18" font-weight="normal" fill="#22364a" text-anchor="start">Publish only complete, current attempts</text>
+<rect x="160" y="896" width="880" height="115" rx="14" fill="#f0f3fb" stroke="#2e5266" stroke-width="2"/>
+<text x="184" y="931" font-size="22" font-weight="bold" fill="#22364a" text-anchor="start">ARTIFACT STORAGE</text>
+<text x="184" y="962" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">storage/ · video, detections, tracks, coordinates, analytics, CSV, PDF</text>
+<text x="184" y="990" font-size="20" font-weight="normal" fill="#22364a" text-anchor="start">Large files outside SQLite · protected access · no public storage mount</text>
+<path d="M 1040 953 H 1172 V 390 H 1045" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="1160" y="860" transform="rotate(-90 1160 860)" font-size="18" fill="#22364a">API checks access + freshness before returning artifacts</text>
+<text x="600" y="1051" font-size="18" font-weight="normal" fill="#22364a" text-anchor="middle">Runtime: WSL2 Ubuntu + Windows browser · settings, database and storage shared by API / worker</text></g></svg>

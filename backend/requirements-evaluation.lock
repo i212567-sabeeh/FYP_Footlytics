@@ -1,0 +1,7 @@
+# Tested add-on pins. Reuse an existing compatible backend environment.
+# Base dependency versions are recorded in every evaluation summary.
+motmetrics==1.4.0
+pandas==3.0.6
+scipy==1.18.1
+xmltodict==1.0.4
+tzdata==2026.5 ; sys_platform == 'win32' or sys_platform == 'emscripten'

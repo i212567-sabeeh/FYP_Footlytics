@@ -1,0 +1,111 @@
+{
+  "classification_mode": "user_seeded",
+  "mapping_authorization": "User confirmed Team A = blue; Team B = white in this session.",
+  "selection_method": "Visual review of actual torso crops; three examples per team. No benchmark ground truth used.",
+  "source_sha256": "06dcd55de0899d9c287a4ad1247137d0dffeef714291e1192032ab99265e0f9d",
+  "note": "Experimental full-cadence track IDs; not the development match stride-5 IDs. Raw OpenCV features, no ground-truth labels. These values are for cached replay only; the API measures selected crops itself.",
+  "prototypes": [
+    {
+      "team": "team_a",
+      "color": [
+        30.499267578125,
+        19.8046875,
+        -48.328125
+      ],
+      "quality": 0.6753661730369223,
+      "sample_ids": [
+        "stride1-track750-frame378",
+        "stride1-track518-frame260",
+        "stride1-track297-frame148"
+      ]
+    },
+    {
+      "team": "team_b",
+      "color": [
+        80.72509765625,
+        -2.453125,
+        -19.046875
+      ],
+      "quality": 0.8977774263557717,
+      "sample_ids": [
+        "stride1-track680-frame307",
+        "stride1-track601-frame393",
+        "stride1-track6-frame165"
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "id": "stride1-track750-frame378",
+      "team": "team_a",
+      "track_id": 750,
+      "frame_number": 378,
+      "color": [
+        34.27734375,
+        16.078125,
+        -48.328125
+      ],
+      "quality": 0.875
+    },
+    {
+      "id": "stride1-track518-frame260",
+      "team": "team_a",
+      "track_id": 518,
+      "frame_number": 260,
+      "color": [
+        28.9031982421875,
+        25.5234375,
+        -54.09375
+      ],
+      "quality": 0.8090909090909091
+    },
+    {
+      "id": "stride1-track297-frame148",
+      "team": "team_a",
+      "track_id": 297,
+      "frame_number": 148,
+      "color": [
+        30.499267578125,
+        19.8046875,
+        -48.1953125
+      ],
+      "quality": 0.7954545454545454
+    },
+    {
+      "id": "stride1-track680-frame307",
+      "team": "team_b",
+      "track_id": 680,
+      "frame_number": 307,
+      "color": [
+        81.3812255859375,
+        -2.71875,
+        -17.8828125
+      ],
+      "quality": 0.9327731092436975
+    },
+    {
+      "id": "stride1-track601-frame393",
+      "team": "team_b",
+      "track_id": 601,
+      "frame_number": 393,
+      "color": [
+        80.72509765625,
+        -2.453125,
+        -19.046875
+      ],
+      "quality": 0.9322916666666666
+    },
+    {
+      "id": "stride1-track6-frame165",
+      "team": "team_b",
+      "track_id": 6,
+      "frame_number": 165,
+      "color": [
+        80.474853515625,
+        -1.90625,
+        -20.15625
+      ],
+      "quality": 0.9259259259259259
+    }
+  ]
+}

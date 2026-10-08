@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="870" viewBox="0 0 1400 870" role="img" aria-label="FOOTLYTICS computer vision pipeline"><title>FOOTLYTICS computer vision pipeline</title><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#466178"/></marker></defs><rect width="1400" height="870" fill="white"/><g font-family="Arial, Helvetica, sans-serif" fill="#22364a">
+<text x="700" y="48" font-size="30" font-weight="bold" text-anchor="middle">FOOTLYTICS · COMPUTER VISION PIPELINE</text>
+<rect x="40" y="105" width="280" height="150" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="60" y="139" font-size="22" font-weight="bold" text-anchor="start">RECORDED VIDEO</text>
+<text x="60" y="171" font-size="20" font-weight="normal" text-anchor="start">Current match source</text>
+<text x="60" y="198" font-size="20" font-weight="normal" text-anchor="start">Validated + prepared</text>
+<rect x="360" y="105" width="280" height="150" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="380" y="139" font-size="22" font-weight="bold" text-anchor="start">YOLO11n</text>
+<text x="380" y="171" font-size="20" font-weight="normal" text-anchor="start">Person boxes (pixels)</text>
+<text x="380" y="198" font-size="20" font-weight="normal" text-anchor="start">Pretrained · CPU / CUDA</text>
+<rect x="680" y="105" width="280" height="150" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="700" y="139" font-size="22" font-weight="bold" text-anchor="start">BYTETRACK</text>
+<text x="700" y="171" font-size="20" font-weight="normal" text-anchor="start">Match-specific track IDs</text>
+<text x="700" y="198" font-size="20" font-weight="normal" text-anchor="start">No biometric identity</text>
+<rect x="1000" y="105" width="360" height="150" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="1020" y="139" font-size="22" font-weight="bold" text-anchor="start">TEAM CLASSIFICATION</text>
+<text x="1020" y="171" font-size="20" font-weight="normal" text-anchor="start">Automatic / user-seeded</text>
+<text x="1020" y="198" font-size="20" font-weight="normal" text-anchor="start">Manual overrides first</text>
+<text x="1020" y="225" font-size="20" font-weight="normal" text-anchor="start">Unknown preserved</text>
+<path d="M320 180 H356" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M640 180 H676" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M960 180 H996" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<rect x="680" y="350" width="280" height="122" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="700" y="384" font-size="22" font-weight="bold" text-anchor="start">GROUND POINT</text>
+<text x="700" y="416" font-size="20" font-weight="normal" text-anchor="start">Bounding-box bottom</text>
+<text x="700" y="443" font-size="20" font-weight="normal" text-anchor="start">centre · image pixels</text>
+<rect x="360" y="350" width="280" height="122" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="380" y="384" font-size="22" font-weight="bold" text-anchor="start">HOMOGRAPHY</text>
+<text x="380" y="416" font-size="20" font-weight="normal" text-anchor="start">Current calibration</text>
+<text x="380" y="443" font-size="20" font-weight="normal" text-anchor="start">Match dimensions (m)</text>
+<rect x="40" y="350" width="280" height="122" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="60" y="384" font-size="22" font-weight="bold" text-anchor="start">CLEAN TRAJECTORIES</text>
+<text x="60" y="416" font-size="20" font-weight="normal" text-anchor="start">Reject invalid jumps</text>
+<text x="60" y="443" font-size="20" font-weight="normal" text-anchor="start">Keep observed intervals</text>
+<path d="M820 255 V346" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M680 411 H644" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M360 411 H324" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="650" y="521" font-size="20" font-weight="normal" text-anchor="middle">Stitching: offline experiment rejected; no production merging.</text>
+<rect x="40" y="625" width="360" height="156" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="60" y="659" font-size="22" font-weight="bold" text-anchor="start">PLAYER ANALYTICS</text>
+<text x="60" y="691" font-size="20" font-weight="normal" text-anchor="start">Distance · speed · sprints</text>
+<text x="60" y="718" font-size="20" font-weight="normal" text-anchor="start">Time-weighted heatmap</text>
+<text x="60" y="745" font-size="20" font-weight="normal" text-anchor="start">Unseen gaps add no occupancy</text>
+<rect x="480" y="625" width="360" height="156" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="500" y="659" font-size="22" font-weight="bold" text-anchor="start">TEAM TACTICS</text>
+<text x="500" y="691" font-size="20" font-weight="normal" text-anchor="start">Visible-team geometry</text>
+<text x="500" y="718" font-size="20" font-weight="normal" text-anchor="start">Assigned usable positions</text>
+<text x="500" y="745" font-size="20" font-weight="normal" text-anchor="start">Unavailable if insufficient</text>
+<rect x="920" y="625" width="440" height="156" rx="14" fill="#edf7f4" stroke="#2e5266" stroke-width="2"/>
+<text x="940" y="659" font-size="22" font-weight="bold" text-anchor="start">DASHBOARD / PDF / CSV</text>
+<text x="940" y="691" font-size="20" font-weight="normal" text-anchor="start">Saved current backend results</text>
+<text x="940" y="718" font-size="20" font-weight="normal" text-anchor="start">Protected result / report endpoints</text>
+<text x="940" y="745" font-size="20" font-weight="normal" text-anchor="start">Coverage and quality warnings</text>
+<path d="M180 472 V621" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M270 472 V558 H560 V621" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M1180 255 V575 H755 V621" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="1195" y="422" font-size="18" font-weight="normal" text-anchor="start">Team assignments</text>
+<path d="M400 690 H440 V813 H1050 V785" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<path d="M840 697 H916" fill="none" stroke="#466178" stroke-width="2.5" marker-end="url(#arrow)"/>
+<text x="700" y="852" font-size="19" font-weight="normal" text-anchor="middle">Separate queued stages; arrows show saved-data dependencies, not one synchronous request.</text>
+</g></svg>

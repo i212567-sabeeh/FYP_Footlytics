@@ -1,0 +1,192 @@
+{
+  "scope": "First 60 seconds, same 1500-frame cached YOLO run; not held-out accuracy or frozen Phase 15",
+  "source": {
+    "source_video": "storage/raw/matches/1/757559cc56df4d43be4a07ba11068826.mp4",
+    "source_sha256": "06dcd55de0899d9c287a4ad1247137d0dffeef714291e1192032ab99265e0f9d",
+    "frame_interval": [
+      0,
+      1500
+    ],
+    "seconds": 60.0,
+    "source_fps": 25.0,
+    "image_size": 2560,
+    "confidence": 0.25,
+    "model": "yolo11n.pt",
+    "device": "cpu",
+    "threads": 4,
+    "baseline_code": {
+      "backend/app/cv/tracker.py": "673d4e6337718beb63d02799b77df4dec1438fb3f15a221633594e0849173250",
+      "backend/app/cv/team_classifier.py": "33019fb4eb1f9a9e1df255211a416e7461905707e6f990615fb5e75794efdaf1",
+      "backend/app/cv/team_pipeline.py": "34e96f023d3b6815203115a01a9d961808e72eaa8f2525cd534940cc36af4110",
+      "backend/app/cv/detector.py": "dca7f33ee86137395c5e213469cd50b3ed558d9eff2da03fe34046fdcf7a5c8a",
+      "backend/app/cv/tracking_pipeline.py": "79a9ed42344d48addc32ba5df94bb370be31c0df7a100429c68dc9654223d71d",
+      "backend/app/core/config.py": "7284c511c59061388145785a8e0006ca67394772468cac42b4d091245096060b"
+    },
+    "source_detection_csv": "storage/tracks/matches/1/videos/1/jobs/2/attempt-0-ea1a0a3ed9e44ce3b05744b5aec1c704.csv",
+    "source_track_csv": "storage/tracks/matches/1/videos/1/jobs/3/attempt-0-dc0b8f998cd242d385421aa78665047f.csv",
+    "phase15_reused_or_modified": false
+  },
+  "detection_timing": {
+    "processed_frames": 1500,
+    "total_detections": 17965,
+    "sampled_detections": 3597,
+    "total_processing_seconds": 462.1955356009994,
+    "inference_seconds": 436.14976148898495,
+    "inference_fps": 3.4391856477901177,
+    "stride5_subset_inference_seconds": 91.8401455969888,
+    "stride5_subset_inference_fps": 3.266545344085737
+  },
+  "continuity_stride5": {
+    "unique_tracks": 181,
+    "tracks_with_multiple_observations": 164,
+    "tracks_with_consecutive_observations": 160,
+    "mean_duration_seconds": 2.569060773480663,
+    "median_duration_seconds": 1.5999999999999996,
+    "p90_duration_seconds": 7.0000000000000036,
+    "p95_duration_seconds": 8.400000000000002,
+    "longest_duration_seconds": 17.0,
+    "very_short_tracks_under_2_seconds": 102,
+    "new_ids_per_video_minute_proxy": 181.0,
+    "total_consecutively_observed_track_seconds": 303.0,
+    "definitions": "Track duration is last minus first timestamp (span). Consecutively observed time excludes missed sampled frames. New IDs/min is a proxy, not ground-truth identity fragmentation or IDF1.",
+    "tracking_seconds": 0.4505665440001394,
+    "detection_inference_fps": 3.266545344085737,
+    "detection_inference_seconds": 91.8401455969888,
+    "timing_note": "Both cadence inputs use the same measured full-inference pass; stride5 timing is its measured sampled inference subset, excluding unmeasured standalone decoding overhead."
+  },
+  "continuity_stride1": {
+    "unique_tracks": 251,
+    "tracks_with_multiple_observations": 236,
+    "tracks_with_consecutive_observations": 235,
+    "mean_duration_seconds": 2.7475697211155374,
+    "median_duration_seconds": 0.9600000000000009,
+    "p90_duration_seconds": 7.92,
+    "p95_duration_seconds": 12.040000000000001,
+    "longest_duration_seconds": 39.64,
+    "very_short_tracks_under_2_seconds": 168,
+    "new_ids_per_video_minute_proxy": 251.0,
+    "total_consecutively_observed_track_seconds": 610.32,
+    "definitions": "Track duration is last minus first timestamp (span). Consecutively observed time excludes missed sampled frames. New IDs/min is a proxy, not ground-truth identity fragmentation or IDF1.",
+    "tracking_seconds": 1.9882119969997802,
+    "detection_inference_fps": 3.4391856477901177,
+    "detection_inference_seconds": 436.14976148898495,
+    "timing_note": "Both cadence inputs use the same measured full-inference pass; stride5 timing is its measured sampled inference subset, excluding unmeasured standalone decoding overhead."
+  },
+  "stitching": {
+    "before": {
+      "unique_tracks": 251,
+      "tracks_with_multiple_observations": 236,
+      "tracks_with_consecutive_observations": 235,
+      "mean_duration_seconds": 2.7475697211155374,
+      "median_duration_seconds": 0.9600000000000009,
+      "p90_duration_seconds": 7.92,
+      "p95_duration_seconds": 12.040000000000001,
+      "longest_duration_seconds": 39.64,
+      "tracks_at_least_10_seconds": 17,
+      "tracks_at_least_30_seconds": 1,
+      "very_short_tracks_under_2_seconds": 168,
+      "new_ids_per_video_minute_proxy": 251.0,
+      "total_consecutively_observed_track_seconds": 610.32,
+      "definitions": "Duration is last minus first timestamp (span), not continuous occupancy. Usable tracks have at least one consecutive sampled interval. New IDs/minute is a proxy, not IDF1 or proof of identity continuity."
+    },
+    "after": {
+      "unique_tracks": 251,
+      "tracks_with_multiple_observations": 236,
+      "tracks_with_consecutive_observations": 235,
+      "mean_duration_seconds": 2.7475697211155374,
+      "median_duration_seconds": 0.9600000000000009,
+      "p90_duration_seconds": 7.92,
+      "p95_duration_seconds": 12.040000000000001,
+      "longest_duration_seconds": 39.64,
+      "tracks_at_least_10_seconds": 17,
+      "tracks_at_least_30_seconds": 1,
+      "very_short_tracks_under_2_seconds": 168,
+      "new_ids_per_video_minute_proxy": 251.0,
+      "total_consecutively_observed_track_seconds": 610.32,
+      "definitions": "Duration is last minus first timestamp (span), not continuous occupancy. Usable tracks have at least one consecutive sampled interval. New IDs/minute is a proxy, not IDF1 or proof of identity continuity."
+    },
+    "accepted_merges": 0,
+    "decisions": {
+      "temporal_overlap": 3114,
+      "impossible_speed": 467,
+      "insufficient_motion_evidence": 200,
+      "scale_mismatch": 40,
+      "insufficient_appearance_evidence": 7,
+      "inconsistent_motion": 14,
+      "impossible_motion": 9,
+      "excessive_gap": 27617
+    },
+    "only_appearance_eligible_tracks": 4,
+    "production_enabled": false
+  },
+  "classification": {
+    "5": {
+      "diagnostics": {
+        "attempted_crops": 705,
+        "budget_skipped_crops": 0,
+        "rejected_small_or_outside_crops": 268,
+        "rejected_feature_crops": 0,
+        "insufficient_sample_tracks": 180,
+        "inconsistent_evidence_tracks": 0,
+        "eligible_tracks": 1,
+        "cluster_separation_lab": 62.25299852926236,
+        "low_margin_tracks": 0,
+        "median_sample_quality": 0.5850340136054422,
+        "median_samples_per_track": 1.0,
+        "diagnostic_basis": "user_seeded_consensus",
+        "unknown_reasons": {
+          "insufficient_consistent_samples": 180
+        }
+      },
+      "valid_samples": 437,
+      "sampled_frames": 186,
+      "counts": {
+        "unknown": 180,
+        "team_b": 1
+      },
+      "processing_seconds": 2.5059139350014448,
+      "classification_mode": "user_seeded"
+    },
+    "1": {
+      "diagnostics": {
+        "attempted_crops": 1288,
+        "budget_skipped_crops": 73,
+        "rejected_small_or_outside_crops": 618,
+        "rejected_feature_crops": 0,
+        "insufficient_sample_tracks": 248,
+        "inconsistent_evidence_tracks": 0,
+        "eligible_tracks": 3,
+        "cluster_separation_lab": 62.25299852926236,
+        "low_margin_tracks": 0,
+        "median_sample_quality": 0.6394557823129252,
+        "median_samples_per_track": 1.0,
+        "diagnostic_basis": "user_seeded_consensus",
+        "unknown_reasons": {
+          "insufficient_consistent_samples": 248
+        }
+      },
+      "valid_samples": 597,
+      "sampled_frames": 434,
+      "counts": {
+        "unknown": 248,
+        "team_b": 3
+      },
+      "processing_seconds": 3.149814193002385,
+      "classification_mode": "user_seeded"
+    }
+  },
+  "artifact_root": "storage/evaluation/post-phase18/continuity-60s",
+  "artifact_sha256": {
+    "detections-full.csv": "89e14cfd5d55f6cb645ef9b1483a6454566b9214c7362a11c8c10c47ff0192ba",
+    "detection-summary-stride1.json": "39baa42fc5ad1ea0522b8733b8a9586ec5d714b4f8eac1bc06079c68729b4895",
+    "baseline-cadence-stride5.json": "309ee503fb9a2a368f84ba373486f2ba557fdab7cf98fad6a0cdedd0d8cee33d",
+    "baseline-cadence-stride1.json": "a3a124d7caab2e90097e14787a906483352706bf88d31545afd56e947a13e9a9",
+    "stitch-decisions.csv": "8e83869f8ec9b70cfe951f5a3f975dcadf067cd06a0065d2d0b2ce70aff21ef7",
+    "stitching-evaluation.json": "89e3520b2d11d846b60d21879edc52863ae42c2943c1454dc142a36c4a837993",
+    "stitched-experiment.csv": "c1bf058b71dc416eae0011c3cae77421f466e4421f7ffa621fb2b1c1649799fc",
+    "final-classification-evaluation.json": "b5b6b3769d208a54b3228fd447eeb2b208a62002e9fafce81cc82f479f9f6327",
+    "final-cli-seeded/manifest.json": "3f4cea5e09566413e4af344dbe054f8f1c7d027989c442f8987470930aada741",
+    "final-cli-seeded/classification-stride1.json": "f6c10c9c09ce35635b61fcdabc37362a69ac8343916068a9145432650b5579b8",
+    "final-cli-seeded/classification-stride5.json": "9d9ac3baf2dceaa0eab1b4b8db7ca05af5a9830c7fe782cb0ff3ea65e40d57a6"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "source": "footlytics",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "dataset_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "pipeline_config": {},
+  "software_versions": {},
+  "source_revision": "Replace with the commit or source checksum used for predictions",
+  "model_weights": null,
+  "clips": []
+}

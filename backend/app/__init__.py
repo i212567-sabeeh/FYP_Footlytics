@@ -1,0 +1,1 @@
+"""FOOTLYTICS backend application."""

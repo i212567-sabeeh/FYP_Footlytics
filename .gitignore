@@ -1,0 +1,99 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# JavaScript / TypeScript
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.vite/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+
+# Local tools and runtime output
+.tools/
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.db-*
+*.sqlite-*
+*.sqlite3-*
+dump.rdb
+appendonlydir/
+appendonly.aof*
+
+# Keep directory placeholders, never generated/user data
+storage/**
+!storage/**/
+!storage/**/.gitkeep
+# Includes third-party SoccerNet clips, annotations and derived evaluation inputs.
+data/**
+!data/**/
+!data/**/.gitkeep
+!data/annotations/README.md
+!data/annotations/*.template.csv
+!data/annotations/*.template.json
+
+# Footage and model weights (small test fixtures need an explicit exception)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Editor / OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Defense in depth: keys, credentials, archives and temporary files
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa*
+id_ed25519*
+credentials*.json
+service-account*.json
+.git-credentials
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+*.partial
+*.bak
+*.tmp
+*.swp
+*~
+.ipynb_checkpoints/
+.hypothesis/
+playwright-report/
+test-results/
+
+# Local AI-assistant state (shared project instructions stay tracked)
+.claude/settings.local.json
+CLAUDE.local.md

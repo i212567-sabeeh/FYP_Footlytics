@@ -1,0 +1,5 @@
+-r requirements.txt
+-r requirements-evaluation.txt
+httpx2>=2.13,<3.0
+pytest>=8.3,<10.0
+ruff>=0.11,<1.0
