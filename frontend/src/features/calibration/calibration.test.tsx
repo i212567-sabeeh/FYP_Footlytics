@@ -330,3 +330,36 @@ describe('calibration page', () => {
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes('/calibration'))).toBe(false)
   })
 })
+
+describe('calibration workspace guidance', () => {
+  const currentStep = () => within(screen.getByRole('list', { name: 'Calibration steps' })).getAllByRole('listitem')
+    .find((item) => item.getAttribute('aria-current') === 'step')?.textContent
+
+  it('highlights the current step and keeps frame and pitch landmarks visually distinct', async () => {
+    renderPage()
+    const { imageControl, pitchControl } = await readyFrame()
+    expect(currentStep()).toContain('Click a landmark on the frame')
+    choosePair(0.5, 0.5, 0.5, 0.5)
+    expect(imageControl.querySelectorAll('circle[fill="#0f172a"]')).toHaveLength(1)
+    expect(pitchControl.querySelectorAll('rect[fill="#0f172a"]')).toHaveLength(1)
+    expect(pitchControl.querySelector('text')).toHaveTextContent('1')
+    fireEvent.click(imageControl, { clientX: 140, clientY: 107.5 })
+    expect(currentStep()).toContain('Click the same landmark on the pitch')
+    fireEvent.click(pitchControl, { clientX: 700, clientY: 100 })
+    choosePair(0.9, 0.1, 1, 0); choosePair(0.9, 0.9, 1, 1)
+    expect(currentStep()).toContain('Save or update the calibration')
+    expect(screen.getByText('Top-left (0, 0)')).toBeVisible()
+    expect(screen.getByText('Bottom-right (60, 36)')).toBeVisible()
+  })
+  it('shows saved calibration details from the backend, including the homography', async () => {
+    state.calibration = calibration
+    renderPage()
+    await readyFrame()
+    const quality = within(screen.getByRole('region', { name: 'Saved calibration quality' }))
+    for (const [label, value] of [['Landmark pairs', '4'], ['Source frame', '375 (12.500 s)'], ['Image size', '1920 × 1080 px'], ['Pitch', '60 × 36 m']]) {
+      expect(quality.getByText(label!).nextElementSibling).toHaveTextContent(value!)
+    }
+    fireEvent.click(quality.getByText('Homography matrix (image pixels → pitch metres)'))
+    expect(quality.getAllByRole('row').map((row) => row.textContent)).toEqual(['1.000000.000000.00000', '0.000001.000000.00000', '0.000000.000001.00000'])
+  })
+})

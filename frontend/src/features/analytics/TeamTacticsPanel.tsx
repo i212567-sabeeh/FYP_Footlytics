@@ -2,13 +2,14 @@ import { useState } from 'react'
 import type { UseQueryResult } from '@tanstack/react-query'
 import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { ChartLine, Database, Network, Scale } from 'lucide-react'
+import { FootballPitch } from '../../components/FootballPitch'
 import { Field } from '../football/ui'
 import { SERIES_LIMIT, useTeamSeries } from './api'
 import { metric } from './format'
 import { TEAM_TONES } from './results'
 import { Metric, MetricRow, ResultState } from './ResultState'
-import { SERIES_METRICS, seriesPoints, type SeriesMetric } from './series'
-import { TEAM_LABELS, type TeamAnalytics, type TeamTacticalSummary } from './types'
+import { centroidSegments, SERIES_METRICS, seriesPoints, type SeriesMetric } from './series'
+import { TEAM_LABELS, type TeamAnalytics, type TeamSnapshot, type TeamTacticalSummary } from './types'
 
 const count = (value: number) => value.toLocaleString('en-GB')
 
@@ -93,7 +94,37 @@ function TeamSummary({ team, minimum }: { team: TeamTacticalSummary; minimum: nu
   </section>
 }
 
-function TeamSeries({ matchId, version, jobId }: { matchId: number; version: string; jobId: number }) {
+const PATH_COLORS = { team_a: '#38bdf8', team_b: '#fbbf24' } as const
+
+/** Each team's centroid path for the loaded window, drawn in pitch metres on the shared pitch. */
+function CentroidMap({ a, b, length, width, first, last }: { a: TeamSnapshot[]; b: TeamSnapshot[]; length: number; width: number; first: number; last: number }) {
+  const teams = [['team_a', centroidSegments(a)], ['team_b', centroidSegments(b)]] as const
+  const stroke = Math.min(length, width) / 140, dot = Math.min(length, width) / 110
+  return <figure className="mt-6 min-w-0 max-w-4xl">
+    <h4 className="font-medium">Centroid path on the pitch</h4>
+    <p className="mt-1 text-xs text-slate-400">Average position of each team&apos;s visible players per snapshot in this window. Breaks mark insufficient snapshots; ○ first and ● last position.</p>
+    <div className="mt-3 overflow-hidden rounded-xl border border-line">
+      <FootballPitch muted length={length} width={width} label={`Team centroid paths for snapshots ${first}–${last} on a ${length} by ${width} metre pitch`}>
+        {teams.map(([team, segments]) => <g key={team} stroke={PATH_COLORS[team]} fill={PATH_COLORS[team]} aria-hidden="true">
+          {segments.map((segment) => <polyline key={segment[0]!.frame} points={segment.map((point) => `${point.x},${point.y}`).join(' ')} fill="none" strokeWidth={stroke}
+            strokeLinejoin="round" strokeLinecap="round" strokeDasharray={team === 'team_b' ? `${stroke * 3} ${stroke * 2}` : undefined} opacity={0.85} />)}
+          {segments.flat().map((point) => <circle key={point.frame} cx={point.x} cy={point.y} r={dot / 2.2} stroke="none" opacity={0.7} />)}
+          {segments.length > 0 && <>
+            <circle cx={segments[0]![0]!.x} cy={segments[0]![0]!.y} r={dot * 1.2} fill="#0f172a" strokeWidth={stroke} />
+            <circle cx={segments.at(-1)!.at(-1)!.x} cy={segments.at(-1)!.at(-1)!.y} r={dot * 1.2} stroke="#0f172a" strokeWidth={stroke / 1.5} />
+          </>}
+        </g>)}
+      </FootballPitch>
+    </div>
+    <figcaption className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-400">
+      {teams.map(([team, segments]) => <span key={team} className="flex items-center gap-2">
+        <span aria-hidden="true" className="h-0.5 w-5 rounded-full" style={{ backgroundColor: PATH_COLORS[team] }} />
+        {`${team === 'team_a' ? 'Team A' : 'Team B'}: ${segments.flat().length} positions in ${segments.length} continuous ${segments.length === 1 ? 'run' : 'runs'}`}</span>)}
+    </figcaption>
+  </figure>
+}
+
+function TeamSeries({ matchId, version, jobId, length, width }: { matchId: number; version: string; jobId: number; length: number; width: number }) {
   const [offset, setOffset] = useState(0)
   const [selectedMetric, setMetric] = useState<SeriesMetric>('width_metres')
   const query = useTeamSeries(matchId, version, jobId, offset)
@@ -125,6 +156,7 @@ function TeamSeries({ matchId, version, jobId }: { matchId: number; version: str
             </LineChart>
           </ResponsiveContainer>
         </div>
+        <CentroidMap a={query.data.a.items} b={query.data.b.items} length={length} width={width} first={offset + 1} last={offset + points.length} />
         <details className="mt-4"><summary className="cursor-pointer text-sm text-emerald-300">View chart values</summary>
           <div className="analytics-scroll mt-3" tabIndex={0} role="region" aria-label="Tactical series values"><table className="analytics-table">
             <caption className="sr-only">{title}; insufficient values are unavailable</caption><thead><tr><th scope="col">Frame</th><th scope="col">Time</th><th scope="col">Team A</th><th scope="col">Team B</th></tr></thead>
@@ -153,7 +185,8 @@ export function TeamTacticsPanel({ matchId, version, query, assignmentsChanged }
       <DataBasis data={query.data} />
       <TeamComparison teams={query.data.teams} />
       <div className="grid min-w-0 gap-5 lg:grid-cols-2">{query.data.teams.map((team) => <TeamSummary key={team.team} team={team} minimum={query.data.summary.min_players_per_team} />)}</div>
-      <TeamSeries key={`${version}:${query.data.job_id}`} matchId={matchId} version={version} jobId={query.data.job_id} />
+      <TeamSeries key={`${version}:${query.data.job_id}`} matchId={matchId} version={version} jobId={query.data.job_id}
+        length={query.data.summary.pitch_length_metres} width={query.data.summary.pitch_width_metres} />
     </>}
   </section>
 }

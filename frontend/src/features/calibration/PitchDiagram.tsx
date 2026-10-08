@@ -1,7 +1,7 @@
 import type { MouseEvent } from 'react'
 import { FootballPitch } from '../../components/FootballPitch'
 import { displayToPoint } from './coordinates'
-import { PointMarkers } from './PointMarkers'
+import { MarkerLegend, PointMarkers } from './PointMarkers'
 import type { Point } from './types'
 
 interface Props {
@@ -18,14 +18,21 @@ export function PitchDiagram({ length, width, points, canSelect, onSelect }: Pro
     const point = displayToPoint(event.clientX, event.clientY, event.currentTarget.getBoundingClientRect(), length, width)
     if (point) onSelect(point)
   }
+  // Orientation labels sit outside the button: its box must equal the pitch for click mapping.
   return <>
-    <p className="mb-3 text-sm text-slate-400">Top-left (0, 0) · X = length, Y = width</p>
-    <button type="button" aria-label="Select pitch landmark" disabled={!canSelect} onClick={select} className="block w-full cursor-crosshair disabled:cursor-default">
+    <div className="flex items-end justify-between gap-2 text-[11px] tabular-nums text-slate-500">
+      <span>Top-left (0, 0)</span><span className="text-slate-400">X → length, {length} m</span><span>({length}, 0)</span>
+    </div>
+    <button type="button" aria-label="Select pitch landmark" disabled={!canSelect} onClick={select}
+      className={`mt-1 block w-full ring-1 ring-emerald-300/20 ${canSelect ? 'cursor-crosshair ring-2 ring-amber-300/70' : 'cursor-default'}`}>
       <FootballPitch length={length} width={width}>
-        <PointMarkers points={points} width={length} height={width} />
+        <PointMarkers points={points} width={length} height={width} shape="square" />
       </FootballPitch>
     </button>
-    <p className="mt-3 text-sm text-slate-300">{length} m length × {width} m width · Bottom-right ({length}, {width})</p>
+    <div className="mt-1 flex items-start justify-between gap-2 text-[11px] tabular-nums text-slate-500">
+      <span>(0, {width})</span><span className="text-slate-400">Y ↓ width, {width} m</span><span>Bottom-right ({length}, {width})</span>
+    </div>
+    <MarkerLegend shape="square" />
     <p className="mt-2 text-xs text-slate-400">Interior markings are schematic, especially for 5v5. Use known, measured landmarks on your pitch.</p>
   </>
 }

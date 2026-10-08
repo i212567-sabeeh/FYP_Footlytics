@@ -1,6 +1,6 @@
 import { useEffect, useRef, type MouseEvent } from 'react'
 import { displayToPoint } from './coordinates'
-import { PointMarkers } from './PointMarkers'
+import { MarkerLegend, PointMarkers } from './PointMarkers'
 import type { CalibrationFrameData, Point } from './types'
 
 interface Props {
@@ -30,7 +30,8 @@ export function CalibrationFrame({ frame, points, pending, canSelect, onSelect, 
   }
 
   return <>
-    <button type="button" aria-label="Select image landmark" disabled={!canSelect} onClick={select} className="relative block w-full cursor-crosshair disabled:cursor-default">
+    <button type="button" aria-label="Select image landmark" disabled={!canSelect} onClick={select}
+      className={`relative block w-full overflow-hidden rounded-lg bg-black ring-1 ${canSelect ? 'cursor-crosshair ring-2 ring-emerald-300/60' : 'cursor-default ring-line'}`}>
       <img ref={image} alt="Calibration video frame" width={frame.width} height={frame.height} className="block h-auto w-full" draggable={false}
         onLoad={(event) => {
           if (event.currentTarget.naturalWidth !== frame.width || event.currentTarget.naturalHeight !== frame.height) {
@@ -42,6 +43,7 @@ export function CalibrationFrame({ frame, points, pending, canSelect, onSelect, 
         <PointMarkers points={points} pending={pending} width={frame.width} height={frame.height} />
       </svg>
     </button>
-    <p className="mt-3 text-sm text-slate-400">Frame {frame.frameNumber} at {frame.timestamp.toFixed(3)} s · {frame.width} × {frame.height} pixels</p>
+    <p className="mt-3 text-sm tabular-nums text-slate-400">Frame {frame.frameNumber} at {frame.timestamp.toFixed(3)} s · {frame.width} × {frame.height} pixels</p>
+    <MarkerLegend shape="circle" />
   </>
 }

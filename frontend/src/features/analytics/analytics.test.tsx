@@ -8,7 +8,7 @@ import type { Role } from '../auth/types'
 import type { ProcessingJob } from '../media/types'
 import * as fixture from './__fixtures__/analytics'
 import { HeatmapView } from './HeatmapPanel'
-import { seriesPoints } from './series'
+import { centroidSegments, seriesPoints } from './series'
 import type { TeamAssignment, TrackTeam } from './types'
 
 const fetchMock = vi.fn<typeof fetch>()
@@ -552,6 +552,30 @@ describe('honest observed coverage', () => {
     expect(screen.getByText('Unavailable')).toBeVisible()
     expect(screen.getByText(/No observed heatmap occupancy/)).toBeVisible()
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+})
+
+describe('pitch visualisations', () => {
+  it('lists the most occupied backend cells with readable bounds and a stepped legend', () => {
+    render(<HeatmapView data={{ ...fixture.heatmap, cells: [...fixture.heatmap.cells,
+      { track_id: 3, x_bin: 0, y_bin: 3, x_min: 0, x_max: 10, y_min: 15, y_max: 56.666666666666664, occupancy_seconds: 0, occupancy_fraction: 0 }] }} />)
+    const items = screen.getByText('Most occupied cells').nextElementSibling!.querySelectorAll('li')
+    expect([...items].map((item) => item.textContent)).toEqual(['X 30–40 m, Y 0–5 m52.0 s · 80.0%', 'X 10–20 m, Y 10–15 m13.0 s · 20.0%', 'X 0–10 m, Y 15–56.7 m0.0 s · 0.0%'])
+    expect(screen.getByLabelText('Occupancy intensity legend')).toHaveTextContent('< 25% of peak25–50%50–75%75–100%Peak cell')
+  })
+  it('splits centroid paths at insufficient snapshots without interpolating', () => {
+    expect(centroidSegments(fixture.seriesA).map((segment) => segment.map((point) => point.frame))).toEqual([[0], [60, 90]])
+    expect(centroidSegments([{ ...fixture.snapshot, frame_number: 60 }, { ...fixture.snapshot, centroid_y: null, frame_number: 30 }, fixture.snapshot])
+      .map((segment) => segment.map((point) => [point.frame, point.x, point.y]))).toEqual([[[0, 14.25, 8.5]], [[60, 14.25, 8.5]]])
+  })
+  it('draws each team centroid path for the loaded series window on the match pitch', async () => {
+    renderPage(); await openTab('Team Tactics')
+    const map = await screen.findByRole('img', { name: 'Team centroid paths for snapshots 1–4 on a 40 by 20 metre pitch' })
+    expect(map).toHaveAttribute('viewBox', '0 0 40 20')
+    expect(map.querySelectorAll('polyline')).toHaveLength(3)
+    expect(screen.getByText('Team A: 3 positions in 2 continuous runs')).toBeVisible()
+    expect(screen.getByText('Team B: 4 positions in 1 continuous run')).toBeVisible()
+    expect(requests(/\/series\?/)).toHaveLength(2)
   })
 })
 
