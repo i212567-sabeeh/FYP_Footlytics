@@ -1,5 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import { useQueryClient, type QueryKey } from '@tanstack/react-query'
+import { notifyManager, useQueryClient, type QueryKey } from '@tanstack/react-query'
 
 /**
  * Reads data another component has already loaded, without creating a query
@@ -8,6 +8,8 @@ import { useQueryClient, type QueryKey } from '@tanstack/react-query'
  */
 export function useCachedQueryData<T>(queryKey: QueryKey | null): T | undefined {
   const client = useQueryClient()
-  const subscribe = useCallback((onChange: () => void) => client.getQueryCache().subscribe(onChange), [client])
+  // Batched like TanStack's own hooks: the cache can emit while another
+  // component renders (e.g. a new query is added), when React forbids updates.
+  const subscribe = useCallback((onChange: () => void) => client.getQueryCache().subscribe(notifyManager.batchCalls(onChange)), [client])
   return useSyncExternalStore(subscribe, () => (queryKey ? client.getQueryData<T>(queryKey) : undefined))
 }

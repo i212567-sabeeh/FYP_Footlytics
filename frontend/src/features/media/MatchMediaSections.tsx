@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
 import { useAuth } from '../../hooks/useAuth'
 import { hasAnyRole } from '../auth/types'
 import { useCapabilities } from '../football/hooks'
 import type { FootballMatch } from '../football/types'
+import { PipelineTracker } from '../pipeline/PipelineTracker'
 import { useMatchJobs, useMatchVideo, usePreparation } from './api'
 import { isActiveJob } from './types'
 import { ProcessingPanel } from './ProcessingPanel'
@@ -25,9 +25,9 @@ export function MatchMediaSections({ match }: { match: FootballMatch }) {
   const active = (firstPage.data?.items.some(isActiveJob) ?? false) || Boolean(preparation.data && isActiveJob(preparation.data))
 
   return <>
+    {/* The pipeline reuses these queries, so it adds no duplicate polling. */}
+    {canReadJobs && <PipelineTracker match={match} video={video} jobs={firstPage} preparation={preparation} canManage={canManage && !video.error} />}
     <VideoPanel matchId={match.id} query={video} canManage={canManage} hasActiveJob={active} />
-    {video.data && !video.error && <Link className="button-secondary mt-4 inline-block" to={`/matches/${match.id}/calibration`}>Calibrate Pitch</Link>}
-    {canReadJobs && <Link className="button-secondary mt-4 inline-block sm:ml-3" to={`/matches/${match.id}/review`}>Player Detection &amp; Tracking Review</Link>}
     {capabilities.match && !canManage && <p className="mt-3 text-sm text-slate-400">Video changes and preparation are unavailable for archived matches or inactive clubs.</p>}
     {canReadJobs && <ProcessingPanel matchId={match.id} videoId={video.data?.id} canManage={canManage && !video.error} hasActiveJob={active} preparation={preparation} query={jobs} offset={offset} onOffsetChange={setOffset} />}
   </>

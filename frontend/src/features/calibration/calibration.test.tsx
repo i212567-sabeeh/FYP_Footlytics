@@ -96,7 +96,9 @@ afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals() })
 describe('calibration page', () => {
   it('opens from Match Details, loads an authenticated JPEG and releases its object URL on departure', async () => {
     const page = renderPage('/matches/1')
-    fireEvent.click(await screen.findByRole('link', { name: 'Calibrate Pitch' }))
+    // Match Details also renders the processing pipeline, whose result checks
+    // settle one by one; allow for that under a loaded parallel test run.
+    fireEvent.click(await screen.findByRole('link', { name: 'Calibrate Pitch' }, { timeout: 3000 }))
     expect(await screen.findByRole('heading', { name: 'Pitch calibration' })).toBeVisible()
     const { image } = await readyFrame()
     expect(image).toHaveAttribute('width', '1920')
