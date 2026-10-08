@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { PencilLine, Save, X } from 'lucide-react'
 import { useOptions } from './api'
 import { ErrorMessage, Field, QueryState } from './ui'
 import { POSITIONS, type AccountReference, type Club, type FootballPlayer, type Team } from './types'
@@ -12,8 +13,8 @@ export interface PlayerValue {
 }
 
 export function FormButtons({ saving, cancel, label }: { saving: boolean; cancel: () => void; label: string }) {
-  return <div className="mt-6 flex gap-3"><button className="button-primary" disabled={saving}>{saving ? 'Saving…' : label}</button>
-    <button type="button" className="button-secondary" disabled={saving} onClick={cancel}>Cancel</button></div>
+  return <div className="mt-6 flex flex-wrap gap-3 border-t border-line pt-5"><button className="button-primary" disabled={saving}><Save aria-hidden="true" className="size-4" />{saving ? 'Saving…' : label}</button>
+    <button type="button" className="button-secondary" disabled={saving} onClick={cancel}><X aria-hidden="true" className="size-4" />Cancel</button></div>
 }
 export function ClubPicker({ value, onChange, disabled = false, all = false }: {
   value: string; onChange: (value: string) => void; disabled?: boolean; all?: boolean
@@ -25,7 +26,8 @@ export function ClubPicker({ value, onChange, disabled = false, all = false }: {
   </select>{!disabled && <ErrorMessage error={clubs.error} />}</Field>
 }
 export function FormPanel({ title, children }: { title: string; children: ReactNode }) {
-  return <div className="panel mb-8"><h2 className="mb-6 text-xl font-semibold">{title}</h2>{children}</div>
+  return <div className="panel mb-8 border-emerald-400/25"><h2 className="mb-6 flex items-center gap-2 text-xl font-semibold">
+    <PencilLine aria-hidden="true" className="size-5 text-emerald-300" />{title}</h2>{children}</div>
 }
 export function NameForm({ kind, initial, saving, error, onSave, onCancel }: FormProps<Club | Team> & {
   kind: 'club' | 'team'; onSave: (value: NameValue) => void
@@ -48,7 +50,7 @@ export function NameForm({ kind, initial, saving, error, onSave, onCancel }: For
     <Field label="Name"><input className="field-input" required maxLength={200} value={name} onChange={(e) => setName(e.target.value)} /></Field>
     <Field label="Short name (optional)"><input className="field-input" maxLength={40} value={shortName} onChange={(e) => setShortName(e.target.value)} /></Field>
     <Field label="Description (optional)"><textarea className="field-input" maxLength={2000} rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></Field>
-    {initial && <label className="flex gap-2"><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />Active {kind}</label>}
+    {initial && <label className="flex items-center gap-3 text-sm"><input type="checkbox" className="size-4 accent-emerald-400" checked={active} onChange={(e) => setActive(e.target.checked)} />Active {kind}</label>}
     <ErrorMessage error={validation || error} /><FormButtons saving={saving} cancel={onCancel} label={`Save ${kind}`} />
   </fieldset></form></FormPanel>
 }
@@ -89,7 +91,7 @@ export function PlayerForm({ initial, saving, error, onCancel, onSave }: FormPro
       </select><ErrorMessage error={accounts.error} /></Field>
     </div>
     <p className="text-sm text-slate-400">A football player can exist without a login. Eligible accounts must be active club members and can link to one player only.</p>
-    {initial && <label className="flex gap-2"><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} />Active player</label>}
+    {initial && <label className="flex items-center gap-3 text-sm"><input type="checkbox" className="size-4 accent-emerald-400" checked={active} onChange={(e) => setActive(e.target.checked)} />Active player</label>}
     <ErrorMessage error={validation || error} /><FormButtons saving={saving} cancel={onCancel} label="Save player" />
   </fieldset></form></FormPanel>
 }

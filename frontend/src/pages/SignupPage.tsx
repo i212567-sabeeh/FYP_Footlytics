@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import { CircleAlert, CircleCheck, LoaderCircle, Send } from 'lucide-react'
 import { Link, Navigate } from 'react-router'
+import { AuthCard, PasswordInput } from '../features/auth/AuthCard'
 import { ROLE_OPTIONS } from '../features/auth/types'
 import { submitSignup } from '../features/users/signupApi'
 import { useAuth } from '../hooks/useAuth'
@@ -52,24 +54,25 @@ export function SignupPage() {
     }
   }
 
-  return <section className="mx-auto max-w-md rounded-xl border border-slate-800 bg-slate-900 p-6 sm:p-8">
-    <p className="text-sm font-semibold uppercase tracking-widest text-emerald-400">Request access</p>
-    <h1 className="mt-3 text-3xl font-semibold">Sign up for FOOTLYTICS</h1>
-    <p className="mt-3 text-slate-400">Submit your details for administrator approval. You can sign in once your access is approved.</p>
+  return <AuthCard eyebrow="Request access" title="Sign up for FOOTLYTICS" intro="Submit your details for administrator approval. You can sign in once your access is approved."
+    footer={<>Already have approved access? <Link to="/login" className="record-link">Sign in</Link></>}>
     {receipt ? <div className="mt-8 space-y-4">
-      <p role="status" className="rounded-lg border border-emerald-800 bg-emerald-950/40 p-4 text-emerald-200">{receipt}</p>
+      <p role="status" className="flex items-start gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-4 text-emerald-200">
+        <CircleCheck aria-hidden="true" className="mt-0.5 size-5 shrink-0" />{receipt}</p>
       <p className="text-sm text-slate-400">Contact your administrator for an update. This page does not send an email notification.</p>
     </div> : <form onSubmit={submit} noValidate className="mt-8">
       <fieldset disabled={submitting} className="space-y-5">
-        <div>
-          <label htmlFor="signup-name" className="field-label">Full name</label>
-          <input id="signup-name" autoComplete="name" required maxLength={200} className="field-input"
-            value={name} onChange={(event) => setName(event.target.value)} />
-        </div>
-        <div>
-          <label htmlFor="signup-email" className="field-label">Email</label>
-          <input id="signup-email" type="email" autoComplete="username" required maxLength={254} className="field-input"
-            value={email} onChange={(event) => setEmail(event.target.value)} />
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="signup-name" className="field-label">Full name</label>
+            <input id="signup-name" autoComplete="name" required maxLength={200} className="field-input"
+              value={name} onChange={(event) => setName(event.target.value)} />
+          </div>
+          <div>
+            <label htmlFor="signup-email" className="field-label">Email</label>
+            <input id="signup-email" type="email" autoComplete="username" required maxLength={254} className="field-input"
+              value={email} onChange={(event) => setEmail(event.target.value)} />
+          </div>
         </div>
         <div>
           <label htmlFor="signup-role" className="field-label">Requested role</label>
@@ -80,21 +83,25 @@ export function SignupPage() {
           </select>
           <p id="signup-role-help" className="mt-2 text-sm text-slate-400">An administrator must approve your role and access before you can sign in.</p>
         </div>
-        <div>
-          <label htmlFor="signup-password" className="field-label">Password</label>
-          <input id="signup-password" type="password" autoComplete="new-password" required minLength={8} maxLength={128}
-            aria-describedby="signup-password-help" className="field-input" value={password} onChange={(event) => setPassword(event.target.value)} />
-          <p id="signup-password-help" className="mt-2 text-sm text-slate-400">8–128 characters.</p>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="signup-password" className="field-label">Password</label>
+            <PasswordInput id="signup-password" autoComplete="new-password" required minLength={8} maxLength={128}
+              aria-describedby="signup-password-help" value={password} onChange={(event) => setPassword(event.target.value)} />
+            <p id="signup-password-help" className="mt-2 text-sm text-slate-400">8–128 characters.</p>
+          </div>
+          <div>
+            <label htmlFor="signup-confirm" className="field-label">Confirm password</label>
+            <PasswordInput id="signup-confirm" toggleLabel="password confirmation" autoComplete="new-password" required maxLength={128}
+              value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
+          </div>
         </div>
-        <div>
-          <label htmlFor="signup-confirm" className="field-label">Confirm password</label>
-          <input id="signup-confirm" type="password" autoComplete="new-password" required maxLength={128} className="field-input"
-            value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
-        </div>
-        {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
-        <button type="submit" className="button-primary w-full">{submitting ? 'Submitting…' : 'Request access'}</button>
+        {error && <p role="alert" className="flex items-start gap-2 rounded-lg border border-red-400/30 bg-red-400/10 px-3 py-2.5 text-sm text-red-200">
+          <CircleAlert aria-hidden="true" className="mt-0.5 size-4 shrink-0" />{error}</p>}
+        <button type="submit" className="button-primary w-full">
+          {submitting ? <LoaderCircle aria-hidden="true" className="size-4 animate-spin motion-reduce:animate-none" /> : <Send aria-hidden="true" className="size-4" />}
+          {submitting ? 'Submitting…' : 'Request access'}</button>
       </fieldset>
     </form>}
-    <p className="mt-6 text-sm text-slate-400">Already have approved access? <Link to="/login" className="record-link">Sign in</Link></p>
-  </section>
+  </AuthCard>
 }

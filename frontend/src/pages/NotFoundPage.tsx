@@ -1,13 +1,10 @@
+import { House, MapPinOff } from 'lucide-react'
 import { Link } from 'react-router'
+import { MessagePanel } from '../components/MessagePanel'
 
 export function NotFoundPage() {
-  return (
-    <section>
-      <h1 className="text-3xl font-semibold">Page not found</h1>
-      <p className="mt-4 text-slate-300">This page is unavailable.</p>
-      <Link to="/" className="mt-6 inline-block text-emerald-400 underline">
-        Return home
-      </Link>
-    </section>
-  )
+  return <MessagePanel icon={MapPinOff} title="Page not found"
+    actions={<Link to="/" className="button-primary"><House aria-hidden="true" className="size-4" />Return home</Link>}>
+    <p>This page is unavailable. Check the address or use the navigation.</p>
+  </MessagePanel>
 }

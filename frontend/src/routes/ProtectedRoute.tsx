@@ -1,4 +1,6 @@
+import { LoaderCircle, LogOut, RotateCw, ShieldAlert } from 'lucide-react'
 import { Navigate, Outlet, useLocation } from 'react-router'
+import { MessagePanel } from '../components/MessagePanel'
 import { useAuth } from '../hooks/useAuth'
 
 export function ProtectedRoute() {
@@ -7,18 +9,15 @@ export function ProtectedRoute() {
   if (!auth.accessToken) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
-  if (auth.isLoading) return <p role="status">Checking your session…</p>
+  if (auth.isLoading) return <p role="status" className="flex items-center gap-2 py-8 text-sm text-slate-400">
+    <LoaderCircle aria-hidden="true" className="size-4 animate-spin text-emerald-400 motion-reduce:animate-none" />Checking your session…</p>
   if (auth.error) {
-    return (
-      <section>
-        <h1 className="text-2xl font-semibold">Unable to verify your session</h1>
-        <p role="alert" className="mt-4">{auth.error.message}</p>
-        <div className="mt-4 flex gap-4">
-          <button className="button-primary" onClick={auth.retrySession}>Try again</button>
-          <button className="button-secondary" onClick={auth.logout}>Sign out</button>
-        </div>
-      </section>
-    )
+    return <MessagePanel icon={ShieldAlert} tone="danger" title="Unable to verify your session" actions={<>
+      <button className="button-primary" onClick={auth.retrySession}><RotateCw aria-hidden="true" className="size-4" />Try again</button>
+      <button className="button-secondary" onClick={auth.logout}><LogOut aria-hidden="true" className="size-4" />Sign out</button>
+    </>}>
+      <p role="alert">{auth.error.message}</p>
+    </MessagePanel>
   }
   return auth.user ? <Outlet /> : <Navigate to="/login" replace />
 }

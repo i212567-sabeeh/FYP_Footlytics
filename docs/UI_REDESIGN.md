@@ -28,7 +28,8 @@ missing or stale results stay "Unavailable", "Not generated" or "Needs regenerat
 | 4 | Match list, match header, evidence-based processing pipeline | 4d2a366 |
 | 5 | Analytics workspace (overview, players, tactics, processing, reports) | ac4330b, 7b68cfe |
 | 6 | Detection & tracking review workspace and frame navigation | 44630b8 |
-| 7 | Pitch visualisations, calibration workspace, heatmap, centroid paths | see log |
+| 7 | Pitch visualisations, calibration workspace, heatmap, centroid paths | b731f18 |
+| 8 | Authentication, users, access requests, clubs, teams, players, squads | see log |
 
 ## Checkpoint log
 
@@ -40,4 +41,13 @@ missing or stale results stay "Unavailable", "Not generated" or "Needs regenerat
   workspace (step guide, distinct frame/pitch markers, orientation labels, saved
   quality details and homography); heatmap palette, legend and most-occupied cells;
   team centroid paths from the existing team series (no per-player trajectory
-  endpoint exists). Next: Stage 8 (authentication and management pages).
+  endpoint exists); 238/238 frontend tests; 58/58 browser checks; b731f18.
+- **Stage 8** — sign-in/sign-up card with product context and password visibility
+  toggles; user management table (role badges, status pills, pinned actions on
+  small screens) and sectioned user form; access-request cards and review panel;
+  clubs/teams/players lists with filter cards and record rows, detail headers,
+  club-access removal confirmation, squad table; shared `MessagePanel` for access
+  denied, not found and session errors. 242/242 frontend tests; 86/86 browser
+  checks including coach, Club Management and player role checks. Next: Stage 9
+  (final QA, code splitting, accessibility fix for frame navigation, end-to-end CV
+  run, documentation).
