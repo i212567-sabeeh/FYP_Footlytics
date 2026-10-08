@@ -14,8 +14,9 @@ export function useRecords<T>(path: string, filters: Filters = {}, enabled = tru
   return useQuery({ queryKey: ['football', path, filters], enabled,
     queryFn: ({ signal }) => listRecords<T>(path, filters, signal) })
 }
+export const recordKey = (path: string) => ['football', path] as const
 export function useRecord<T>(path: string) {
-  return useQuery({ queryKey: ['football', path], queryFn: ({ signal }) => apiRequest<T>(path, { signal }) })
+  return useQuery({ queryKey: recordKey(path), queryFn: ({ signal }) => apiRequest<T>(path, { signal }) })
 }
 // Pickers traverse every page; a club with >100 records must not silently lose options.
 export function useOptions<T>(path: string, filters: Filters = {}, enabled = true) {
