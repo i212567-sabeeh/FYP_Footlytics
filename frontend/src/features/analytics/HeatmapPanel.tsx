@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Flame } from 'lucide-react'
 import { FootballPitch } from '../../components/FootballPitch'
 import { Field } from '../football/ui'
 import { useHeatmap } from './api'
@@ -55,7 +56,7 @@ export function HeatmapPanel({ matchId, version, selected, assignments, onSelect
   const [error, setError] = useState('')
   const query = useHeatmap(matchId, version, selected)
   return <section className="panel min-w-0" aria-labelledby="heatmap-heading">
-    <h2 id="heatmap-heading" className="text-xl font-semibold">Player heatmap</h2>
+    <h2 id="heatmap-heading" className="flex items-center gap-2 text-xl font-semibold"><Flame aria-hidden="true" className="size-5 text-emerald-300" />Player heatmap</h2>
     <p className="mt-2 text-sm text-slate-400">Choose a track from Players or enter a match Track ID.</p>
     <form className="mt-5 flex flex-wrap items-end gap-3" onSubmit={(event) => {
       event.preventDefault()

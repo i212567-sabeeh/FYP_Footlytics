@@ -1,40 +1,36 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { ArrowLeft, CalendarDays, ChartColumnBig, RefreshCw, Shield, Video, VideoOff } from 'lucide-react'
 import { Link, useParams } from 'react-router'
-import { ApiError } from '../api/client'
 import { AnalyticsJobs } from '../features/analytics/AnalyticsJobs'
+import { AnalyticsOverview } from '../features/analytics/AnalyticsOverview'
+import { AnalyticsTabs, type AnalyticsTab } from '../features/analytics/AnalyticsTabs'
 import { AssignmentsPanel } from '../features/analytics/AssignmentsPanel'
 import { HeatmapPanel } from '../features/analytics/HeatmapPanel'
-import { PlayersPanel } from '../features/analytics/PlayersPanel'
-import { Metric, ResultState } from '../features/analytics/ResultState'
+import { PlayersPanel, type PlayerSort } from '../features/analytics/PlayersPanel'
 import { TeamTacticsPanel } from '../features/analytics/TeamTacticsPanel'
 import { jobVersion, useAssignments, usePlayerAnalytics, useTeamAnalytics, useTrajectoryResult } from '../features/analytics/api'
-import { TEAM_LABELS } from '../features/analytics/types'
+import { availabilityOf } from '../features/analytics/results'
 import { useRecord } from '../features/football/api'
 import { useCapabilities } from '../features/football/hooks'
 import type { FootballMatch } from '../features/football/types'
-import { Heading, QueryState } from '../features/football/ui'
+import { QueryState } from '../features/football/ui'
 import { mediaKey, useMatchJobs, useMatchVideo } from '../features/media/api'
-import { isActiveJob, type MatchVideo, type ProcessingJob } from '../features/media/types'
+import type { MatchVideo, ProcessingJob } from '../features/media/types'
 import { ReportsPanel } from '../features/reports/ReportsPanel'
 
-const TABS = [
-  ['overview', 'Overview'], ['players', 'Players'], ['tactics', 'Team Tactics'], ['heatmap', 'Heatmap'], ['assignments', 'Team Assignments'],
-] as const
-type Tab = typeof TABS[number][0]
 const UPSTREAM = ['video_preparation', 'player_detection', 'player_tracking', 'coordinate_mapping', 'trajectory_cleaning'] as const
-
-function availability(query: Pick<UseQueryResult, 'isPending' | 'isFetching' | 'error'>): string {
-  if (query.error) return query.error instanceof ApiError && /stale|changed|replaced/i.test(query.error.message) ? 'Regeneration needed' : 'Unavailable'
-  return query.isPending || query.isFetching ? 'Checking…' : 'Available'
-}
+// Sticky top bar (4rem) plus the sticky tab bar; matches the panel's scroll-mt-32.
+const STICKY_OFFSET = 128
 
 function AnalyticsContent({ match, video, jobs }: { match: FootballMatch; video: MatchVideo; jobs: ProcessingJob[] }) {
-  const [tab, setTab] = useState<Tab>('overview')
+  const [tab, setTab] = useState<AnalyticsTab>('overview')
   const [offset, setOffset] = useState(0)
   const [selected, setSelected] = useState<number | null>(null)
+  const [sort, setSort] = useState<PlayerSort>({ key: 'track_id', descending: false })
   const [assignmentsChanged, setAssignmentsChanged] = useState(false)
-  const tabs = useRef<(HTMLButtonElement | null)[]>([])
+  const panel = useRef<HTMLDivElement>(null)
+  const switched = useRef(false)
   const capability = useCapabilities()
   const base = `${video.id}:${video.updated_at}:${match.pitch_length_metres}:${match.pitch_width_metres}`
   const playerVersion = `${base}:${jobVersion(jobs, [...UPSTREAM, 'player_analytics'])}`
@@ -50,50 +46,60 @@ function AnalyticsContent({ match, video, jobs }: { match: FootballMatch; video:
   const currentTactics = tactics.isSuccess && !tactics.isFetching ? tactics.data : undefined
   const trajectoryReady = trajectories.isSuccess && !trajectories.isFetching && trajectories.data.video_id === video.id
 
-  return <div className="mt-7 min-w-0">
-    <div className="flex flex-wrap gap-1 border-b border-slate-800 pb-3" role="tablist" aria-label="Match analytics sections">
-      {TABS.map(([key, label], index) => <button key={key} id={`analytics-tab-${key}`} type="button" role="tab" aria-selected={tab === key}
-        aria-controls={`analytics-panel-${key}`} tabIndex={tab === key ? 0 : -1} ref={(element) => { tabs.current[index] = element }}
-        className={`rounded-lg px-3 py-2.5 text-sm font-medium ${tab === key ? 'bg-emerald-400 text-slate-950' : 'text-slate-300 hover:bg-slate-900'}`}
-        onClick={() => setTab(key)} onKeyDown={(event) => {
-          const next = event.key === 'ArrowRight' ? (index + 1) % TABS.length : event.key === 'ArrowLeft' ? (index + TABS.length - 1) % TABS.length
-            : event.key === 'Home' ? 0 : event.key === 'End' ? TABS.length - 1 : null
-          if (next === null) return
-          event.preventDefault(); setTab(TABS[next]![0]); tabs.current[next]?.focus()
-        }}>{label}</button>)}
-    </div>
-    <div className="mt-6 min-w-0 space-y-6" role="tabpanel" id={`analytics-panel-${tab}`} aria-labelledby={`analytics-tab-${tab}`}>
-      {tab === 'overview' && <>
-        <section className="panel" aria-labelledby="overview-heading"><h2 id="overview-heading" className="text-xl font-semibold">Analysis overview</h2>
-          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-7 lg:grid-cols-4">
-            <Metric label="Pitch dimensions" value={`${match.pitch_length_metres} × ${match.pitch_width_metres} m`} hint="X = length · Y = width" />
-            <Metric label="Analyzed tracks" value={currentPlayers?.total ?? 'Unavailable'} />
-            <Metric label="Processing" value={jobs.some(isActiveJob) ? 'In progress' : 'No active job'} />
-            <Metric label="Source video" value={video.original_filename} />
-            <Metric label="Cleaned trajectories" value={availability(trajectories)} />
-            <Metric label="Player analytics" value={availability(players)} />
-            <Metric label="Team tactical analytics" value={availability(tactics)} />
-            <Metric label="Team assignments" value={availability(assignments)} />
-          </dl>
-          <div className="mt-6 grid gap-3 border-t border-slate-800 pt-5 sm:grid-cols-2">{(['team_a', 'team_b'] as const).map((team) => {
-            const summary = currentTactics?.teams.find((row) => row.team === team)
-            return <p key={team} className="text-sm text-slate-300"><strong>{TEAM_LABELS[team]}</strong>: {summary ? summary.valid_snapshots ? `${summary.valid_snapshots} valid tactical snapshots` : 'Insufficient visible players' : 'Tactical result unavailable'}</p>
-          })}</div>
-        </section>
-        <ResultState query={trajectories} name="Cleaned trajectories">{trajectories.data && <p className="text-sm text-slate-400">Trajectory result #{trajectories.data.job_id}: {trajectories.data.usable_rows} usable observations across {trajectories.data.unique_tracks} tracks. Metrics use cleaned positions only.</p>}</ResultState>
-        <ResultState query={players} name="Player analytics" />
-        <ResultState query={tactics} name="Team tactical analytics" assignmentsChanged={assignmentsChanged} />
-        <ReportsPanel matchId={match.id} version={`${match.updated_at}:${playerVersion}:${tacticalVersion}:${assignmentVersion}`} jobs={jobs} canManage={canManage} playersReady={!!currentPlayers} teamsReady={!!currentTactics} />
-      </>}
-      {tab === 'players' && <PlayersPanel matchId={match.id} version={playerVersion} query={players} assignments={currentAssignments}
-        offset={offset} onOffset={setOffset} selected={selected} onSelect={setSelected} onHeatmap={() => setTab('heatmap')} />}
+  useEffect(() => {
+    // A tab chosen far down a long section opens at the start of the new section.
+    if (!switched.current) return
+    switched.current = false
+    const element = panel.current
+    if (element && element.getBoundingClientRect().top < STICKY_OFFSET) element.scrollIntoView?.({ block: 'start' })
+  }, [tab])
+  function openTab(next: AnalyticsTab) { switched.current = next !== tab; setTab(next) }
+
+  return <div className="mt-6 min-w-0">
+    <AnalyticsTabs tab={tab} onChange={openTab} />
+    <div ref={panel} className="mt-6 min-w-0 scroll-mt-32 space-y-6" role="tabpanel" id={`analytics-panel-${tab}`} aria-labelledby={`analytics-tab-${tab}`}>
+      {tab === 'overview' && <AnalyticsOverview match={match} jobs={jobs} queries={{ players, tactics, assignments, trajectories }} assignmentsChanged={assignmentsChanged} onOpen={openTab}
+        current={{ players: currentPlayers, tactics: currentTactics, assignments: currentAssignments, trajectories: trajectoryReady ? trajectories.data : undefined }} />}
+      {tab === 'players' && <PlayersPanel matchId={match.id} version={playerVersion} query={players} assignments={currentAssignments} sort={sort} onSort={setSort}
+        offset={offset} onOffset={setOffset} selected={selected} onSelect={setSelected} onHeatmap={() => openTab('heatmap')} />}
       {tab === 'heatmap' && <HeatmapPanel key={selected ?? 'none'} matchId={match.id} version={playerVersion} selected={selected} assignments={currentAssignments} onSelect={setSelected} />}
       {tab === 'tactics' && <TeamTacticsPanel matchId={match.id} version={tacticalVersion} query={tactics} assignmentsChanged={assignmentsChanged} />}
       {tab === 'assignments' && <AssignmentsPanel matchId={match.id} query={assignments} canManage={canManage} onChanged={() => setAssignmentsChanged(true)} />}
       {(tab === 'overview' || tab === 'tactics' || tab === 'players') && <AnalyticsJobs matchId={match.id} jobs={jobs} canManage={canManage}
+        outputs={{ player_analytics: availabilityOf(players), team_tactical_analytics: availabilityOf(tactics) }}
         trajectoriesReady={trajectoryReady} assignmentsReady={!!currentAssignments && (currentAssignments.length > 0 || trajectories.data?.unique_tracks === 0)} />}
+      {tab === 'overview' && <ReportsPanel matchId={match.id} version={`${match.updated_at}:${playerVersion}:${tacticalVersion}:${assignmentVersion}`} jobs={jobs}
+        canManage={canManage} playersReady={!!currentPlayers} teamsReady={!!currentTactics} />}
     </div>
   </div>
+}
+
+function AnalyticsHeader({ match, video, onRefresh }: { match: FootballMatch; video: UseQueryResult<MatchVideo | null>; onRefresh: () => void }) {
+  const chip = 'inline-flex max-w-full items-center gap-1.5 rounded-full border border-line-strong px-2.5 py-1'
+  const date = match.match_date ? new Date(match.match_date) : null
+  return <header className="relative overflow-hidden rounded-2xl border border-line bg-surface p-6 shadow-card sm:p-7">
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgb(60_203_127/0.12),transparent_60%)]" />
+    <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="min-w-0">
+        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300"><ChartColumnBig aria-hidden="true" className="size-4" />Match analytics</p>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-balance text-slate-50 sm:text-3xl">{match.title}</h1>
+        <p className="mt-2 text-sm text-slate-300">{match.team_a.name} <span className="text-slate-500">vs</span> {match.team_b.name}</p>
+        <ul className="mt-4 flex flex-wrap gap-2 text-xs font-medium text-slate-300">
+          <li className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2.5 py-1 text-emerald-200">{match.match_format}</li>
+          {date && !Number.isNaN(date.getTime()) && <li className={chip}><CalendarDays aria-hidden="true" className="size-3.5 shrink-0 text-slate-500" />{date.toLocaleDateString()}</li>}
+          <li className={chip}><Shield aria-hidden="true" className="size-3.5 shrink-0 text-slate-500" /><span className="truncate">{match.club.name}</span></li>
+          <li className={chip} title={video.data?.original_filename}>{video.data ? <Video aria-hidden="true" className="size-3.5 shrink-0 text-emerald-300" />
+            : <VideoOff aria-hidden="true" className="size-3.5 shrink-0 text-slate-500" />}<span className="truncate">{video.error ? 'Video status unavailable'
+              : video.data === undefined ? 'Checking video…' : video.data ? video.data.original_filename : 'No source video yet'}</span></li>
+          {match.is_archived && <li className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-amber-200">Archived match</li>}
+        </ul>
+      </div>
+      <div className="flex shrink-0 flex-wrap gap-2 lg:justify-end">
+        <Link className="button-secondary" to={`/matches/${match.id}`}><ArrowLeft aria-hidden="true" className="size-4" />Match details</Link>
+        <button type="button" className="button-secondary" onClick={onRefresh}><RefreshCw aria-hidden="true" className="size-4" />Refresh analytics</button>
+      </div>
+    </div>
+  </header>
 }
 
 function Dashboard({ match }: { match: FootballMatch }) {
@@ -102,12 +108,12 @@ function Dashboard({ match }: { match: FootballMatch }) {
   const jobs = useMatchJobs(match.id, 0, true)
   const currentVideo = video.data
   return <>
-    <div className="flex flex-wrap items-center justify-between gap-4"><div>
-      <p className="text-lg font-medium text-slate-200">{match.title}</p>
-      <p className="mt-2 text-sm text-slate-400">{match.team_a.name} vs {match.team_b.name} · {match.match_format} · {match.club.name}</p>
-    </div><button className="button-secondary" onClick={() => void client.resetQueries({ queryKey: mediaKey(match.id) })}>Refresh analytics</button></div>
+    <AnalyticsHeader match={match} video={video} onRefresh={() => void client.resetQueries({ queryKey: mediaKey(match.id) })} />
     <QueryState query={video} /><QueryState query={jobs} />
-    {video.isSuccess && !video.data && <p className="analytics-state">Upload a valid match video and complete processing before viewing analytics.</p>}
+    {video.isSuccess && !video.data && <div className="analytics-state flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="flex items-center gap-3"><VideoOff aria-hidden="true" className="size-5 shrink-0 text-slate-500" />Upload a valid match video and complete processing before viewing analytics.</p>
+      <Link className="button-secondary shrink-0" to={`/matches/${match.id}`}>Go to match details</Link>
+    </div>}
     {currentVideo && !video.error && jobs.isSuccess && !jobs.error && <AnalyticsContent key={`${match.id}:${currentVideo.id}`} match={match} video={currentVideo} jobs={jobs.data.items.filter((job) => job.video_id === currentVideo.id)} />}
   </>
 }
@@ -116,8 +122,6 @@ export function AnalyticsPage() {
   const { matchId } = useParams()
   const match = useRecord<FootballMatch>(`matches/${matchId}`)
   return <section className="min-w-0">
-    <Link className="record-link text-sm" to={`/matches/${matchId}`}>Back to Match Details</Link>
-    <div className="mt-6"><Heading title="Match Analytics" /></div>
     <QueryState query={match} />
     {match.data && !match.error && <Dashboard key={match.data.id} match={match.data} />}
   </section>

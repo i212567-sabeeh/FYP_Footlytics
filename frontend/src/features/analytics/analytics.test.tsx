@@ -471,6 +471,72 @@ describe('availability and queued analytics', () => {
 })
 
 
+describe('analytics workspace', () => {
+  const overview = () => panel('Analysis overview')
+  const resultRow = (name: string) => within(overview().getByText(name).closest('li')!)
+
+  it('summarises current results with backend values and links to each section', async () => {
+    renderPage()
+    await waitFor(() => expectMetric(overview(), 'Analyzed tracks', '2'))
+    expectMetric(overview(), 'Cleaned observations', '16')
+    expectMetric(overview(), 'Observed frames', '4')
+    expect(resultRow('Team assignments').getByText('2 tracks · Team A 1 · Team B 0 · Unknown 1 · 0 manual overrides')).toBeVisible()
+    expect(resultRow('Cleaned trajectories').getByText('Available')).toBeVisible()
+    expect(screen.getByText('No active processing job')).toBeVisible()
+    for (const [label, value] of [['Partially observed', '1 of 2'], ['Speed measured', '1 of 2'], ['Tracks with sprints', '1 of 2']]) {
+      expectMetric(panel('At a glance'), label!, value!)
+    }
+    expectMetric(within(screen.getByRole('article', { name: 'Team B' })), 'Valid snapshots', '4')
+    fireEvent.click(resultRow('Team tactical analytics').getByRole('button', { name: 'Open Team Tactics' }))
+    expect(screen.getByRole('tab', { name: 'Team Tactics' })).toHaveAttribute('aria-selected', 'true')
+  })
+  it('keeps missing and stale results unavailable instead of showing zero', async () => {
+    state.missingTrajectories = true; state.stale = true
+    renderPage()
+    expect(await screen.findByText('Team tactical analytics need to be regenerated.')).toBeVisible()
+    expect(resultRow('Team tactical analytics').getByText('Needs regeneration')).toBeVisible()
+    expect(resultRow('Cleaned trajectories').getByText('Not generated')).toBeVisible()
+    expect(resultRow('Cleaned trajectories').getByText('Current cleaned trajectories are required.')).toBeVisible()
+    expectMetric(overview(), 'Cleaned observations', 'Unavailable')
+    expectMetric(overview(), 'Observed frames', 'Unavailable')
+    expect(screen.queryByRole('article', { name: 'Team A' })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('article', { name: 'Team tactical analytics processing' })).getByText('Needs regeneration')).toBeVisible()
+  })
+  it('keeps the chosen track and sort order when switching tabs', async () => {
+    renderPage(); await openTab('Players')
+    fireEvent.change(await screen.findByLabelText('Sort current page'), { target: { value: 'total_distance_metres' } })
+    fireEvent.click(screen.getByRole('button', { name: 'View Track 3' }))
+    await screen.findByRole('button', { name: 'View Track 3 heatmap' })
+    await openTab('Overview'); await openTab('Players')
+    expect(screen.getByLabelText('Sort current page')).toHaveValue('total_distance_metres')
+    expect(await screen.findByRole('region', { name: 'Track 3 details' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'View Track 3' })).toHaveAttribute('aria-pressed', 'true')
+    expect(requests(/\/player-analytics\?/)).toHaveLength(1)
+  })
+  it('wraps arrow-key tab navigation and links each tab to its panel', async () => {
+    renderPage()
+    const first = await screen.findByRole('tab', { name: 'Overview' })
+    first.focus(); fireEvent.keyDown(first, { key: 'ArrowLeft' })
+    const last = screen.getByRole('tab', { name: 'Team Assignments' })
+    expect(last).toHaveFocus(); expect(last).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tabpanel')).toHaveAttribute('id', last.getAttribute('aria-controls'))
+    fireEvent.keyDown(last, { key: 'ArrowRight' })
+    expect(screen.getByRole('tab', { name: 'Overview' })).toHaveFocus()
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Overview', 'Players', 'Team Tactics', 'Heatmap', 'Team Assignments'])
+  })
+  it('shows genuine job warnings, retries and the current output state', async () => {
+    state.jobs = [{ ...fixture.job, status: 'completed_with_warnings', warning_message: 'Short fragments were excluded.', retry_count: 2 }]
+    fetchMock.mockImplementation((input, options) => String(input).includes('/player-analytics?')
+      ? Promise.resolve(json({ detail: 'Player analytics are stale after source replacement.' }, 409)) : defaultApi(input, options))
+    renderPage()
+    const card = within(await screen.findByRole('article', { name: 'Player analytics processing' }))
+    expect(card.getByText('Completed with warnings')).toBeVisible()
+    expect(card.getByText('Job #11 · 100% · Retries: 2')).toBeVisible()
+    expect(card.getByText('Short fragments were excluded.')).toBeVisible()
+    expect(await card.findByText('Needs regeneration')).toBeVisible()
+  })
+})
+
 describe('honest observed coverage', () => {
   it('displays the backend percentage without recomputing it and labels a short fragment', () => {
     render(<HeatmapView data={{ ...fixture.heatmap, total_occupancy_seconds: 12, observed_coverage_percent: 4.1,

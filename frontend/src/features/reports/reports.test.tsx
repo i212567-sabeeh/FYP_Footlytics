@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { setAccessToken } from '../auth/tokenStorage'
@@ -122,6 +122,23 @@ describe('report states and actions', () => {
     await act(async () => { await new Promise((resolve) => setTimeout(resolve, 2200)) })
     expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/jobs?'))).toHaveLength(count)
   }, 9000)
+  it('summarises the current PDF and which exports are ready', async () => {
+    status = current
+    panel({ teamsReady: false })
+    await screen.findByText(/Current report ·/)
+    for (const [label, value] of [['File size', '49 KB'], ['Player rows', '7'], ['Team rows', '2'], ['Heatmaps', '4']]) {
+      expect(screen.getByText(label!).nextElementSibling).toHaveTextContent(value!)
+    }
+    expect(screen.getByText('Needs current analytics')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Download Team Analytics CSV' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Download Player Analytics CSV' })).toBeEnabled()
+  })
+  it.each([['missing', empty, 'Not generated'], ['stale', { ...current, current: false, stale: true }, 'Needs regeneration'], ['current', current, 'Available']] as const)(
+    'labels a %s PDF report', async (_, value, label) => {
+      status = value
+      panel()
+      expect(await within(screen.getByRole('article', { name: 'Match PDF report' })).findByText(label)).toBeVisible()
+    })
   it('disables CSV exports without their current analytics', async () => {
     panel({ playersReady: false, teamsReady: false })
     await screen.findByText('No report generated yet.')
