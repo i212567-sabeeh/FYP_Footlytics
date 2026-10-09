@@ -646,3 +646,23 @@ DEFERRED. No ball/event work was added.
 - Tracking fragmentation, zero accepted stitches, sparse seeded classification
   (3/251 at full cadence), Unknown labels and static-camera limits remain explicit.
 - Exact measurements, evidence sources and caveats: [docs/HARDENING.md](docs/HARDENING.md).
+
+## UI redesign (post-core, branch `feature/ui-redesign`)
+
+**Status: Stages 0–9 implemented on `feature/ui-redesign`; awaiting owner review
+before any merge to `main`.** Presentation only: routes, API contracts, RBAC,
+CV/analytics calculations and the backend are unchanged.
+
+- Stages 0–3: design tokens and shared UI, application shell and navigation,
+  dashboard.
+- Stage 4: match list/header and the evidence-based processing pipeline.
+- Stage 5: analytics workspace (overview, players, tactics, processing, reports).
+- Stage 6: detection/tracking review with processed-frame navigation.
+- Stage 7: shared metre-accurate pitch, calibration workspace, heatmap legend and
+  team centroid paths.
+- Stage 8: sign-in, users, access requests, clubs, teams, players and squads.
+- Stage 9: final QA, frame-navigation focus fix, sidebar scrolling on short
+  screens, vendor chunk split, documentation, browser, security and end-to-end
+  CV verification.
+- Stage record, checkpoint log and verification results:
+  [docs/UI_REDESIGN.md](docs/UI_REDESIGN.md).

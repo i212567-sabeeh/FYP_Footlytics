@@ -58,7 +58,8 @@ export function Sidebar({ user, collapsed, onToggle }: { user: User; collapsed: 
     <div className={`flex h-16 shrink-0 items-center border-b border-line ${compact ? 'justify-center' : 'px-5'}`}>
       <Link to="/" className="rounded-lg"><BrandMark compact={compact} /></Link>
     </div>
-    <div className={`flex-1 overflow-y-auto py-5 ${compact ? 'px-2' : 'px-3'}`}><NavigationLinks user={user} compact={compact} /></div>
+    {/* min-h-0 lets the links scroll on short (landscape) viewports instead of hiding behind the account area. */}
+    <div className={`min-h-0 flex-1 overflow-y-auto py-5 ${compact ? 'px-2' : 'px-3'}`}><NavigationLinks user={user} compact={compact} /></div>
     <div className={`space-y-2 border-t border-line ${compact ? 'p-2' : 'p-3'}`}>
       {!tablet && <button type="button" onClick={onToggle} aria-controls="app-sidebar" aria-expanded={!collapsed} title={collapsed ? 'Expand navigation' : undefined}
         className={`flex w-full items-center gap-3 rounded-lg text-sm text-slate-400 transition-colors hover:bg-surface-raised hover:text-slate-100 ${compact ? 'justify-center p-2.5' : 'px-3 py-2'}`}>

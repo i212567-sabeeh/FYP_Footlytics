@@ -12,6 +12,15 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     envDir,
+    build: {
+      rollupOptions: {
+        output: {
+          // Framework code changes rarely: keep it in its own long-cached chunk.
+          // Recharts stays with the lazily loaded analytics route.
+          manualChunks: (id: string) => /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler|@tanstack)[\\/]/.test(id) ? 'vendor' : undefined,
+        },
+      },
+    },
     server: {
       host: '127.0.0.1',
       port: 5173,

@@ -45,6 +45,8 @@ export function FramePreview({ matchId, kind, summary }: { matchId: number; kind
   const [validation, setValidation] = useState<Error | null>(null)
   const [actualSize, setActualSize] = useState(false)
   const timer = useRef<number | undefined>(undefined)
+  const group = useRef<HTMLDivElement>(null)
+  const scrubber = useRef<HTMLInputElement>(null)
   useEffect(() => () => window.clearTimeout(timer.current), [])
   // Without a frame number the backend returns the first frame with saved observations.
   const preview = useQuery({
@@ -67,6 +69,11 @@ export function FramePreview({ matchId, kind, summary }: { matchId: number; kind
     if (!range || position === null) return
     const frame = frameAt(range, index)
     if (frame === current) return
+    // A focused First/Previous or Next/Last button is about to become disabled at
+    // a boundary; move focus to the scrubber first so keyboard users stay in place.
+    const edge = index <= 0 ? 'start' : index >= range.count - 1 ? 'end' : null
+    const active = document.activeElement
+    if (edge && active instanceof HTMLElement && active.dataset.edge === edge && group.current?.contains(active)) scrubber.current?.focus()
     setValidation(null); setDraft(undefined); setPending(frame)
     window.clearTimeout(timer.current)
     timer.current = window.setTimeout(() => { setPending(null); request(frame) }, SETTLE_MS)
@@ -113,18 +120,18 @@ export function FramePreview({ matchId, kind, summary }: { matchId: number; kind
       {shown && selected === null && <p className="text-xs text-slate-500">Opened at the first frame with saved observations.</p>}
     </figure>
     {preview.error && <QueryState query={preview} />}
-    {range ? <div role="group" aria-label={`${label} frame navigation`} onKeyDown={keyDown} className="mt-3 rounded-xl border border-line bg-canvas/40 p-3">
+    {range ? <div ref={group} role="group" aria-label={`${label} frame navigation`} onKeyDown={keyDown} className="mt-3 rounded-xl border border-line bg-canvas/40 p-3">
       <div className="flex items-center gap-2">
-        <button type="button" className="icon-button" aria-label="First processed frame" disabled={atStart} onClick={() => go(0)}><ChevronFirst aria-hidden="true" className="size-4" /></button>
-        <button type="button" className="button-secondary px-3" disabled={atStart} onClick={() => go((position ?? 0) - 1)}>
+        <button type="button" className="icon-button" data-edge="start" aria-label="First processed frame" disabled={atStart} onClick={() => go(0)}><ChevronFirst aria-hidden="true" className="size-4" /></button>
+        <button type="button" className="button-secondary px-3" data-edge="start" disabled={atStart} onClick={() => go((position ?? 0) - 1)}>
           <ChevronLeft aria-hidden="true" className="size-4" /><span className="sr-only lg:not-sr-only">Previous frame</span></button>
-        <input type="range" className="frame-scrubber min-w-0 flex-1" min={0} max={range.count - 1} step={1} value={position ?? 0} disabled={position === null || range.count === 1}
+        <input ref={scrubber} type="range" className="frame-scrubber min-w-0 flex-1" min={0} max={range.count - 1} step={1} value={position ?? 0} disabled={position === null || range.count === 1}
           style={{ '--fill': `${fill}%` } as CSSProperties} aria-label={`${label} frame position`}
           aria-valuetext={current === null ? undefined : `Frame ${current}, processed frame ${(position ?? 0) + 1} of ${range.count}`}
           onChange={(event) => go(Number(event.target.value))} />
-        <button type="button" className="button-secondary px-3" disabled={atEnd} onClick={() => go((position ?? 0) + 1)}>
+        <button type="button" className="button-secondary px-3" data-edge="end" disabled={atEnd} onClick={() => go((position ?? 0) + 1)}>
           <span className="sr-only lg:not-sr-only">Next frame</span><ChevronRight aria-hidden="true" className="size-4" /></button>
-        <button type="button" className="icon-button" aria-label="Last processed frame" disabled={atEnd} onClick={() => go(range.count - 1)}><ChevronLast aria-hidden="true" className="size-4" /></button>
+        <button type="button" className="icon-button" data-edge="end" aria-label="Last processed frame" disabled={atEnd} onClick={() => go(range.count - 1)}><ChevronLast aria-hidden="true" className="size-4" /></button>
       </div>
       <div className="mt-2 flex items-center justify-between gap-3 px-1 text-xs tabular-nums text-slate-500">
         <span>{`Frame ${range.first}`}</span>

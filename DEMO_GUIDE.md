@@ -73,13 +73,13 @@ Pending/rejected requests cannot sign in; approval notifications are manual.
 
 | Time | Demonstration |
 | --- | --- |
-| 0–1 min | Sign in; show navigation, club scope and administrator user management. |
+| 0–1 min | Sign in; show the Home dashboard, sidebar navigation, club scope and administrator user management. |
 | 1–2 min | Show club, two teams, a Player/squad record and a match with its own pitch dimensions. Explain that named players are separate from CV track IDs. |
-| 2–3 min | Show uploaded video metadata, **Video Prepared ✓**, collapsible Processing History and saved calibration. Identify the actual image/pitch landmarks and discuss the fixed-camera assumption. |
-| 3–4 min | Open Detection & Tracking Review. Load a selected frame with real detection boxes and match-specific track IDs. Show asynchronous job progress/history. |
+| 2–3 min | On Match details, walk through the **Processing pipeline** card: each stage's state comes from the current video's jobs and saved results, and the next step only appears when its inputs are current. Show video metadata, **Video Prepared ✓** and Processing History. Open **Pitch calibration**: the step guide, numbered frame/pitch landmark pairs, X/Y orientation, reprojection error and homography matrix; discuss the fixed-camera assumption. |
+| 3–4 min | Open Detection & Tracking Review. Step through processed frames with the buttons, scrubber or ←/→ keys; compare YOLO confidence boxes with ByteTrack IDs and use **Full resolution** for distant players. Show asynchronous job progress/history. |
 | 4–5 min | Review classification mode and Team A/Team B/Unknown labels. Open Set Team Colors for real crop examples or demonstrate a manual correction. Explain that tactics/reports then require matching effective assignments; avoid editing the prepared match unless ready to recompute. |
-| 5–7 min | Open Match Analytics: player metrics, track detail, heatmap and team tactics. Explain units, observed coverage and null/unavailable values. |
-| 7–8 min | Show current PDF, download/open it, then download player and team CSVs. Reports consume saved results and preserve historical artifacts. |
+| 5–7 min | Open Match Analytics: Overview (KPIs and result availability), Players (metrics table → track details → heatmap), Team Tactics (data basis, team comparison, centroid paths, time series). Explain units, observed coverage and null/unavailable values. |
+| 7–8 min | In Reports / Exports, show the current PDF summary, download it, then download player and team CSVs. Reports consume saved results and preserve historical artifacts. |
 | 8–10 min | Show the separate Phase 15 SoccerNet summary and its limitations; demonstrate logout or a read-only role. |
 
 To process a new match, follow the order: upload/preparation → calibration → YOLO

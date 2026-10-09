@@ -513,6 +513,33 @@ the user is deactivated or the signing secret is rotated. There is deliberately
 no backend logout endpoint claiming revocation. Browser role checks hide/deny UI;
 the backend independently enforces role and club scope for every domain route.
 
+## Frontend user interface
+
+The React frontend follows the "Matchday Control Room" design system recorded in
+[docs/UI_REDESIGN.md](docs/UI_REDESIGN.md): dark surfaces, restrained green
+accents, Lucide icons and shared components. The redesign changes presentation
+only; routes, API contracts, permissions and calculations are as described here.
+
+**Navigation.** A role-aware sidebar groups *Workspace* (Home, Matches), *Squad
+data* (Clubs, Teams, Players) and *Administration* (User management, Access
+requests; Admin only). It becomes an icon rail on tablets and a drawer on phones.
+The top bar shows breadcrumbs that name the open match from data already loaded.
+
+| Screen | What it shows |
+| --- | --- |
+| Home | Record totals, latest matches with their genuine latest job state and role-aware quick actions. |
+| Matches / Match details | Filtered match rows; a match header (teams, format, date, pitch size, video status) and the **processing pipeline**, derived only from the current video's jobs and current-result checks: Not started, Queued, Running, Completed, Completed with warnings, Failed, Cancelled or Needs regeneration, with the next safe step and the existing Run/Retry actions. |
+| Pitch calibration | A step guide; frame and pitch panels with numbered matching landmarks (frame circles, pitch squares) and X/Y orientation; the saved reprojection error, pair count and homography matrix from the backend. |
+| Detection & tracking review | YOLO and ByteTrack saved-frame viewers with processed-frame navigation (buttons, scrubber, typed frame, ←/→, PgUp/PgDn, Home/End), full-resolution inspection, job status and retry. |
+| Match analytics | Overview (KPIs, result availability, at a glance), Players (metrics table and track details), Team Tactics (data basis, team comparison, metric lists, time series and team centroid paths), Heatmap, Team Assignments, analytics processing and Reports/Exports. |
+| Access and squad data | Sign-in/sign-up, access requests, users, clubs, teams, players and squads. |
+
+Opening a page never starts processing. Missing, stale or replaced results are
+shown as such, never as zero. Saved-frame previews are fetched with the session
+token, validated (video, job, timestamp, frame, JPEG and dimensions), and their
+object URLs released when replaced. The Analytics route is loaded on demand and
+framework code is a separately cached chunk.
+
 ## Football domain and access
 
 Revision `0002_clubs_teams_players_matches` adds six tables without changing
@@ -1459,6 +1486,22 @@ head and WSL API health passed. Browser evidence includes **55 live checks** and
 **40 explicitly fixture-based viewport checks**; all eight real PDF pages were
 rendered and inspected. See [the complete record](docs/PHASE18_VERIFICATION.md).
 
+UI redesign verification (branch `feature/ui-redesign`, Stage 9): **243 frontend
+tests passed** in two consecutive full runs; ESLint, TypeScript and the production
+build passed with no chunk over 500 kB. The backend was not changed: **1,215 tests
+passed** (687 seconds), Ruff check/format passed and Alembic has the single head
+`0015_team_color_prototypes`. A Playwright/Edge sweep passed **178/178 checks** at
+390, 834, 1440 and 1920 px plus a short landscape view; performance checks (16/16)
+and API-level role checks (53/53) also passed. An isolated end-to-end run re-ran all
+nine processing jobs through Redis/RQ with the CPU YOLO model on a copy of the
+Phase 18 QA data. Detection, tracking, coordinates, trajectories, player analytics
+and heatmaps matched the saved results exactly; after the original manual team
+overrides (tied to a tracking run) were re-applied, team tactics and both CSV
+exports matched too, and the new PDF differed only in its timestamp and job IDs.
+The QA clip is a controlled still frame, so this shows integration and
+repeatability, not motion or coordinate accuracy. Details:
+[docs/UI_REDESIGN.md](docs/UI_REDESIGN.md).
+
 Use the activated WSL environment. From the repository root:
 
 ```bash
@@ -1532,6 +1575,15 @@ Never present a controlled stationary QA clip as real player movement evidence.
   while codec/container metadata remains unavailable with a warning.
 - Health is a liveness check. A production deployment still needs its own HTTPS,
   backup and service supervision configuration.
+- The API exposes per-track heatmaps and per-team snapshot series, not per-player
+  trajectory rows, so the UI draws team centroid paths rather than individual
+  player trajectories. Review previews are backend-annotated JPEGs: there is no
+  client-side box overlay or track filtering, and the detection and tracking
+  viewers step independently. The match list shows no per-match processing state
+  (the list API has none and per-row requests were deliberately avoided).
+- Automated accessibility checks are custom Playwright audits (accessible names,
+  labels, alt text, duplicate IDs, headings, focus); no axe-core colour-contrast
+  audit is part of the repository tooling.
 
 ## Troubleshooting
 

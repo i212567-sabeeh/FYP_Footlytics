@@ -102,6 +102,26 @@ it does not recompute distance, speed or tactical geometry. Reports consume the
 same saved current results, bound heatmap count, label unavailable sections and
 escape formula-like CSV text without corrupting signed numeric values.
 
+## Frontend structure
+
+| Folder | Responsibility |
+| --- | --- |
+| `routes/` | Route table, `ProtectedRoute` (session) and `RoleRoute` (role) guards; the Analytics route is lazy-loaded. |
+| `layouts/` | Application shell: sidebar, top bar with breadcrumbs, mobile drawer and the public sign-in layout. |
+| `pages/` | One component per route (dashboard, matches, calibration, review, analytics, users, clubs, teams, players). |
+| `features/` | Feature modules with API hooks, types and components: `auth`, `users`, `football`, `media`, `pipeline`, `calibration`, `review`, `analytics`, `reports`, `dashboard`. |
+| `components/` | Shared presentation: `FootballPitch` (exact metre viewBox), `StatusBadge`, `MessagePanel`, `BrandMark`, `StatCard`. |
+| `api/` | The authenticated client that attaches tokens and maps API errors. |
+
+Server state lives in TanStack Query. A match's media, jobs, review, calibration,
+analytics and report queries share one key prefix so a refresh or job transition
+invalidates them together; jobs poll only while one is active. Rules that decide
+what the UI claims are pure, unit-tested modules: `pipeline/model.ts` (stage
+states and next step), `analytics/results.ts` (available, missing or stale),
+`analytics/series.ts` (series points and centroid runs), `review/frames.ts`
+(processed-frame arithmetic) and `components/pitchGeometry.ts` (schematic
+markings). The UI derives nothing that the backend did not report.
+
 ## Access and sessions
 
 Admin has global access. Coach/Analyst capabilities remain constrained by club
