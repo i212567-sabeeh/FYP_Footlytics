@@ -1,0 +1,24 @@
+{
+  "description": "Held-out pitch-marking pixels located by eye on frame 0 of the development five-minute clip (storage/raw/matches/1/757559cc56df4d43be4a07ba11068826.mp4, 4096x734 stitched panorama) for calibration 1, whose homography was fitted only on the four pitch corners. Located on 6x zoomed crops with a 10-pixel grid (scripts/evaluate_calibration_landmarks.py crops). Estimated location uncertainty about +/-2 px for high confidence and +/-4 px for medium; low-confidence readings are reported separately. Goal-area corners and penalty spots were not identifiable and are excluded.",
+  "frame": 0,
+  "located_pixels": {
+    "halfway_near_touchline": [2013.0, 481.7],
+    "centre_circle_near": [1982.2, 305.7],
+    "centre_circle_far": [1974.0, 270.7],
+    "halfway_far_touchline": [1972.3, 245.0],
+    "left_penalty_area_near": [1239.0, 366.0],
+    "right_penalty_area_near": [2761.0, 345.3],
+    "left_penalty_area_far": [1635.7, 268.7],
+    "right_penalty_area_far": [2311.8, 256.0]
+  },
+  "confidence": {
+    "halfway_near_touchline": "high: both lines clearly visible",
+    "centre_circle_near": "medium: arc visible, halfway line occluded by players and extrapolated",
+    "centre_circle_far": "medium: arc visible, halfway line partly occluded",
+    "halfway_far_touchline": "medium: assumes the white band at the far grass edge is the touchline",
+    "left_penalty_area_near": "medium: line corner visible",
+    "right_penalty_area_near": "medium: line corner visible",
+    "left_penalty_area_far": "low: diagonal line end, corner not distinct",
+    "right_penalty_area_far": "low: line start, corner not distinct"
+  }
+}
