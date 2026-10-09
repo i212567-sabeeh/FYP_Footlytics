@@ -197,7 +197,7 @@ def _publish(
         "min_crop_width": settings.team_min_crop_width,
         "min_crop_height": settings.team_min_crop_height,
         "unknown_threshold": settings.team_unknown_threshold,
-        "method": "median_lab_kmeans_v1",
+        "method": "seeded_separable_votes_v2" if colors else "median_lab_kmeans_v1",
         "mapping": "user_selected_team_colors" if colors else "ascending_lab_centroid",
         "classification_mode": mode,
         "prototype_set_id": colors["id"] if colors else None,

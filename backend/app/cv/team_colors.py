@@ -11,8 +11,14 @@ from app.cv.team_classifier import (
     MIN_TEAM_SEPARATION,
     Appearance,
     TeamPrediction,
-    aggregate_appearance,
 )
+
+# A crop votes for a kit only when it is at most half as far from that prototype
+# as from the other, within the same-colour tolerance (LAB_TOLERANCE), and its
+# dominant colour covers at least half of the torso pixels. Fixed a priori; see
+# docs/KPI_QUALITY_REPORT.md for the measured effect and sensitivity.
+VOTE_DISTANCE_RATIO = 0.5
+MIN_VOTE_QUALITY = 0.5
 
 
 def fit_prototype(samples: Sequence[Appearance], settings: Settings) -> Appearance:
@@ -71,48 +77,38 @@ def classify_seeded(
     prototypes: Mapping[TrackTeam, Appearance],
     settings: Settings,
 ) -> list[TeamPrediction]:
-    """Require repeated, unopposed evidence against both user-labelled prototypes.
+    """Require repeated, unopposed, clearly separable evidence for one user kit.
 
-    Background-heavy/ambiguous frames do not become artificial negative team votes.
-    Keep at least the configured minimum actual supporting frames; any confident
-    opposite-team observation rejects the track. Then aggregate only this coherent
-    evidence with the existing robust median and consistency penalty. No thresholds
-    are lowered and no sample is duplicated to meet the minimum.
+    Each crop votes for the prototype it clearly matches, or abstains when its
+    colour is ambiguous, far from both kits (e.g. officials) or incoherent
+    (background-heavy). Abstentions are never negative votes. A team needs at least
+    the configured minimum of actual votes and no vote for the other team; nothing
+    is duplicated or relaxed to reach the minimum. Confidence is the share of the
+    track's samples that voted for the assigned team; margin is their mean
+    1 - near/far distance ratio.
     """
     validate_prototypes(prototypes)
     centers = np.asarray(
         [prototypes[t].color for t in (TrackTeam.TEAM_A, TrackTeam.TEAM_B)]
     )
-    separation = min(
-        1.0, float(np.linalg.norm(centers[0] - centers[1])) / (2 * MIN_TEAM_SEPARATION)
-    )
-
-    def score_color(appearance):
-        distances = np.linalg.norm(centers - appearance.color, axis=1)
-        label = int(distances.argmin())
-        near, far = float(distances[label]), float(distances[1 - label])
-        margin = max(0.0, 1 - near / max(far, 1e-6))
-        score = (
-            appearance.quality
-            * separation
-            * margin
-            * max(0.0, 1 - near / LAB_TOLERANCE)
-        )
-        return label, float(np.clip(score, 0, 1)), margin
-
     results = []
     for track_id, samples in sorted(evidence.items()):
-        support: list[list[Appearance]] = [[], []]
+        votes: list[list[float]] = [[], []]
         for sample in samples:
-            if not np.isfinite((*sample.color, sample.quality)).all():
+            if (
+                not np.isfinite((*sample.color, sample.quality)).all()
+                or sample.quality < MIN_VOTE_QUALITY
+            ):
                 continue
-            label, score, _ = score_color(sample)
-            if score >= settings.team_unknown_threshold:
-                support[label].append(sample)
-        label = 0 if len(support[0]) >= len(support[1]) else 1
-        count = len(support[label])
+            distances = np.linalg.norm(centers - np.asarray(sample.color), axis=1)
+            label = int(distances.argmin())
+            near, far = float(distances[label]), float(distances[1 - label])
+            if near <= LAB_TOLERANCE and near <= VOTE_DISTANCE_RATIO * far:
+                votes[label].append(1 - near / far)
+        label = 0 if len(votes[0]) >= len(votes[1]) else 1
+        count = len(votes[label])
         reason = None
-        if support[0] and support[1]:
+        if votes[0] and votes[1]:
             reason = "conflicting_team_evidence"
         elif count < settings.team_min_samples:
             reason = "insufficient_consistent_samples"
@@ -127,28 +123,14 @@ def classify_seeded(
                 )
             )
             continue
-        appearance = aggregate_appearance(support[label], settings)
-        if appearance is None:
-            results.append(
-                TeamPrediction(
-                    track_id,
-                    sample_count=len(samples),
-                    rejection_reason="invalid_appearance",
-                )
-            )
-            continue
-        predicted, score, margin = score_color(appearance)
-        team = (TrackTeam.TEAM_A, TrackTeam.TEAM_B)[label]
-        if predicted != label or score < settings.team_unknown_threshold:
-            team, reason = TrackTeam.UNKNOWN, "inconsistent_color_evidence"
         results.append(
             TeamPrediction(
                 track_id,
-                team,
-                score,
+                (TrackTeam.TEAM_A, TrackTeam.TEAM_B)[label],
+                count / len(samples),
                 len(samples),
-                margin,
-                reason,
+                float(np.mean(votes[label])),
+                None,
                 count,
                 len(samples) - count,
             )

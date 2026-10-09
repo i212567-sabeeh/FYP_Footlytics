@@ -219,10 +219,9 @@ def classify_tracking(
                     for p in predictions
                 ),
                 "eligible_tracks": sum(p.confidence > 0 for p in predictions),
-                "low_margin_tracks": sum(
-                    p.rejection_reason == "inconsistent_color_evidence"
-                    for p in predictions
-                ),
+                # Ambiguous crops abstain from voting; there is no separate
+                # low-margin rejection in seeded mode.
+                "low_margin_tracks": 0,
             }
         )
     diagnostics["unknown_reasons"] = dict(

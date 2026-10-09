@@ -282,6 +282,58 @@ def test_seeded_consensus_rejects_background_without_inventing_samples(settings)
     assert result[2].team == "unknown"  # A confident contradiction stays visible.
 
 
+def test_seeded_votes_accept_typical_crops_that_clearly_match_one_kit(settings):
+    # Typical real crops: 70% coherent colour, 6.4 Lab units from kit A, 52 from B.
+    # The former quality x margin x closeness product (0.7 x 0.88 x 0.74 = 0.46)
+    # rejected this repeated, unopposed evidence.
+    a, b = Appearance((40, 30, -30), 1), Appearance((80, 0, 0), 1)
+    typical = Appearance((44, 26, -27), 0.7)
+    (row,) = classify_seeded(
+        {1: [typical] * 4}, {TrackTeam.TEAM_A: a, TrackTeam.TEAM_B: b}, settings
+    )
+    assert row.team == "team_a" and row.rejection_reason is None
+    assert (row.accepted_sample_count, row.rejected_sample_count) == (4, 0)
+    assert row.confidence == 1
+    near = ((44 - 40) ** 2 + 4**2 + 3**2) ** 0.5
+    far = ((44 - 80) ** 2 + 26**2 + 27**2) ** 0.5
+    assert row.margin == pytest.approx(1 - near / far)
+
+
+@pytest.mark.parametrize(
+    "color,quality",
+    [
+        ((52, 15, -15), 0.9),  # 24 Lab units from A, 35 from B: not twice as close
+        ((10, 45, -55), 0.9),  # 42 from A, beyond the same-colour tolerance
+        ((42, 29, -29), 0.4),  # matches A but most pixels are another colour
+    ],
+)
+def test_seeded_votes_abstain_on_ambiguous_distant_or_incoherent_crops(
+    settings, color, quality
+):
+    a, b = Appearance((40, 30, -30), 1), Appearance((80, 0, 0), 1)
+    (row,) = classify_seeded(
+        {1: [Appearance(color, quality)] * 5},
+        {TrackTeam.TEAM_A: a, TrackTeam.TEAM_B: b},
+        settings,
+    )
+    assert row.team == "unknown"
+    assert row.rejection_reason == "insufficient_consistent_samples"
+    assert row.accepted_sample_count == 0 and row.confidence == 0
+
+
+def test_seeded_confidence_is_the_share_of_samples_that_voted(settings):
+    a, b = Appearance((40, 30, -30), 1), Appearance((80, 0, 0), 1)
+    ambiguous = Appearance((60, 15, -15), 0.9)
+    (row,) = classify_seeded(
+        {1: [a, a, ambiguous, a, ambiguous]},
+        {TrackTeam.TEAM_A: a, TrackTeam.TEAM_B: b},
+        settings,
+    )
+    assert row.team == "team_a"
+    assert row.confidence == pytest.approx(3 / 5)
+    assert (row.accepted_sample_count, row.rejected_sample_count) == (3, 2)
+
+
 def test_downgrade_refuses_to_discard_even_retired_prototype_history(
     client, tracks, coach_headers, engine
 ):
