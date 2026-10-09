@@ -155,7 +155,11 @@ class AnalyticsSummary(ReadModel):
     max_gap_seconds: Positive
     heatmap_bins_x: Annotated[int, Field(ge=1, le=100)]
     heatmap_bins_y: Annotated[int, Field(ge=1, le=100)]
-    method: Literal["consecutive_clean_intervals_v1"] = "consecutive_clean_intervals_v1"
+    # Results saved before this field existed measured every consecutive pair.
+    speed_window_seconds: Annotated[float, Field(ge=0, le=2, allow_inf_nan=False)] = 0
+    method: Literal["consecutive_clean_intervals_v1", "minimum_time_windows_v2"] = (
+        "consecutive_clean_intervals_v1"
+    )
     continuity_policy: Literal["rejected_observation_breaks"] = (
         "rejected_observation_breaks"
     )
@@ -192,6 +196,8 @@ class TrackAnalyticsRead(TrackAnalytics, ObservationCoverage):
     video_id: int
     job_id: int
     trajectory_job_id: int
+    # The saved result's movement window (0: every consecutive observation pair).
+    speed_window_seconds: Annotated[float, Field(ge=0, le=2, allow_inf_nan=False)] = 0
 
 
 class TrackHeatmapRead(ObservationCoverage):

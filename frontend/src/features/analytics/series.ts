@@ -12,11 +12,24 @@ export interface PathPoint { x: number; y: number; frame: number }
 /**
  * A team's centroid positions (pitch metres) split into continuous runs.
  * Insufficient or missing snapshots break the path; nothing is interpolated.
+ * Frames without any usable observation have no row at all, so a frame step
+ * larger than the series' processing cadence also breaks the path.
  */
 export function centroidSegments(rows: TeamSnapshot[]): PathPoint[][] {
+  const ordered = [...rows].sort((first, second) => first.frame_number - second.frame_number)
+  let cadence = 0
+  let previous: number | null = null
+  for (const { frame_number: frame } of ordered) {
+    const step = previous === null ? 0 : frame - previous
+    if (step > 0 && (!cadence || step < cadence)) cadence = step
+    previous = frame
+  }
   const segments: PathPoint[][] = []
   let run: PathPoint[] = []
-  for (const row of [...rows].sort((first, second) => first.frame_number - second.frame_number)) {
+  previous = null
+  for (const row of ordered) {
+    if (run.length && previous !== null && cadence && row.frame_number - previous > cadence) { segments.push(run); run = [] }
+    previous = row.frame_number
     const { centroid_x: x, centroid_y: y } = row
     if (row.sufficient_players && x !== null && y !== null && Number.isFinite(x) && Number.isFinite(y)) run.push({ x, y, frame: row.frame_number })
     else if (run.length) { segments.push(run); run = [] }

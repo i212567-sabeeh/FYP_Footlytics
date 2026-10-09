@@ -300,29 +300,116 @@ def test_multiple_tracks_independent(settings):
     assert updates[-1] == (4, 4)
 
 
-def test_streaming_does_not_buffer_an_entire_track(settings):
-    consumed = written = 0
+@pytest.mark.parametrize("window,intervals,lag", [(0, 9999, 2), (0.2, 4999, 5)])
+def test_streaming_does_not_buffer_an_entire_track(settings, window, intervals, lag):
+    consumed = covered = 0
 
     def observations():
         nonlocal consumed
         for index in range(10000):
             consumed += 1
-            assert consumed - written <= 2
+            # Unmeasured observations stay within one held and one open window.
+            assert consumed - covered <= lag
             yield point(index / 10, 1, frame=index)
 
-    def write(name, _row):
-        nonlocal written
+    def write(name, row):
+        nonlocal covered
         if name == "intervals":
-            written += 1
+            covered += row.end_frame - row.start_frame
 
     run = calculate_players(
         observations(),
         provenance([point(0, 1)]),
-        settings,
+        settings.model_copy(update={"player_speed_window_seconds": window}),
         write=write,
         progress=lambda *_: None,
     )
-    assert run.valid_intervals == 9999
+    assert run.valid_intervals == intervals
+
+
+def frames_at_25(positions, *, start=0, segment=1, track=1):
+    """One observation per 25 FPS frame; positions are exact cleaned metres."""
+    return [
+        CleanObservation(start + k, (start + k) / 25, track, segment, position)
+        for k, position in enumerate(positions)
+    ]
+
+
+def test_speed_window_removes_frame_jitter_from_a_stationary_player(settings):
+    # A stationary player with repeating 5 cm box jitter (period five frames).
+    offsets = [0, 0.05, -0.05, 0.05, -0.05]
+    points = frames_at_25([(50 + offsets[k % 5], 30) for k in range(11)])
+    per_pair, _, _ = calculate(points, settings, player_speed_window_seconds=0)
+    windowed, _, _ = calculate(points, settings, player_speed_window_seconds=0.2)
+    # Per pair: 0.05 + 0.1 + 0.1 + 0.1 + 0.05 metres in every five frames.
+    assert per_pair["players"][0].total_distance_metres == pytest.approx(0.8)
+    assert per_pair["players"][0].max_speed_mps == pytest.approx(2.5)
+    # Window endpoints (frames 0, 5 and 10) share the same offset.
+    row = windowed["players"][0]
+    assert row.total_distance_metres == pytest.approx(0)
+    assert row.max_speed_mps == pytest.approx(0)
+    assert row.active_duration_seconds == pytest.approx(0.4)
+    assert [(i.start_frame, i.end_frame) for i in windowed["intervals"]] == [
+        (0, 5),
+        (5, 10),
+    ]
+
+
+def test_speed_window_remainder_extends_last_window_and_short_runs_are_unmeasured(
+    settings,
+):
+    # 0.2 m per frame is 5 m/s; frames 0-7 span 0.28 s, frames 20-22 only 0.08 s.
+    run_one = frames_at_25([(10 + 0.2 * k, 5) for k in range(8)])
+    run_two = frames_at_25([(40, 5)] * 3, start=20, segment=2)
+    output, run, _ = calculate(run_one + run_two, settings)
+    row = output["players"][0]
+    assert [(i.start_frame, i.end_frame) for i in output["intervals"]] == [(0, 7)]
+    assert output["intervals"][0].dt_seconds == pytest.approx(0.28)
+    assert row.total_distance_metres == pytest.approx(1.4)
+    assert row.active_duration_seconds == pytest.approx(0.28)
+    assert row.average_speed_mps == pytest.approx(5)
+    assert row.max_speed_mps == pytest.approx(5)
+    assert (row.usable_observation_count, row.segment_count) == (11, 2)
+    assert run.valid_intervals == 1 and run.excluded_intervals == 0
+
+
+@pytest.mark.parametrize("fast_frames,sprints", [(30, 1), (20, 0)])
+def test_windowed_sprint_needs_one_second_of_qualifying_windows(
+    settings, fast_frames, sprints
+):
+    # 8 m/s (0.32 m per frame), then 2 m/s for ten frames (0.4 s).
+    fast = [(5 + 0.32 * k, 20) for k in range(fast_frames + 1)]
+    slow = [(fast[-1][0] + 0.08 * k, 20) for k in range(1, 11)]
+    output, _, _ = calculate(frames_at_25(fast + slow), settings)
+    row = output["players"][0]
+    seconds = fast_frames / 25
+    assert row.sprint_count == sprints
+    assert row.max_speed_mps == pytest.approx(8)
+    assert row.total_distance_metres == pytest.approx(0.32 * fast_frames + 0.8)
+    assert row.active_duration_seconds == pytest.approx(seconds + 0.4)
+    if sprints:
+        (event,) = output["sprints"]
+        assert event.duration_seconds == pytest.approx(seconds)
+        assert event.distance_metres == pytest.approx(0.32 * fast_frames)
+        assert (event.start_frame, event.end_frame) == (0, fast_frames)
+    else:
+        assert not output["sprints"] and row.sprint_duration_seconds == 0
+
+
+def test_speed_window_never_spans_a_rejected_observation(settings):
+    # Frames 0-6 (0.24 s) and 8-14 (0.24 s) move at 5 m/s; frame 7 is rejected.
+    before = frames_at_25([(10 + 0.2 * k, 5) for k in range(7)])
+    rejected = [CleanObservation(7, 7 / 25, 1, None, None)]
+    after = frames_at_25([(30 + 0.2 * k, 5) for k in range(7)], start=8)
+    output, run, _ = calculate(before + rejected + after, settings)
+    assert [(i.start_frame, i.end_frame) for i in output["intervals"]] == [
+        (0, 6),
+        (8, 14),
+    ]
+    row = output["players"][0]
+    assert row.total_distance_metres == pytest.approx(2.4)
+    assert row.active_duration_seconds == pytest.approx(0.48)
+    assert run.rejected_rows == 1
 
 
 def test_reader_uses_clean_positions_only(tmp_path, settings):
@@ -408,6 +495,9 @@ def test_reader_rejects_missing_or_inconsistent_artifact(tmp_path, fault):
         ("player_sprint_min_duration_seconds", float("inf")),
         ("player_heatmap_bins_x", 0),
         ("player_heatmap_bins_y", 101),
+        ("player_speed_window_seconds", -0.1),
+        ("player_speed_window_seconds", 2.5),
+        ("player_speed_window_seconds", float("nan")),
     ],
 )
 def test_invalid_analytics_settings_rejected(field, value):

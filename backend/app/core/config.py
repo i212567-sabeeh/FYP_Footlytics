@@ -76,6 +76,12 @@ class Settings(BaseSettings):
     player_sprint_min_duration_seconds: float = Field(
         default=1, gt=0, le=60, allow_inf_nan=False
     )
+    # Minimum elapsed time of one movement measurement. Displacements over a
+    # single 25 FPS frame are dominated by bounding-box jitter (docs/
+    # KPI_QUALITY_REPORT.md); 0 measures every consecutive observation pair.
+    player_speed_window_seconds: float = Field(
+        default=0.2, ge=0, le=2, allow_inf_nan=False
+    )
     player_heatmap_bins_x: int = Field(default=20, ge=1, le=100)
     player_heatmap_bins_y: int = Field(default=12, ge=1, le=100)
     tactics_min_players_per_team: int = Field(default=3, ge=2, le=22)

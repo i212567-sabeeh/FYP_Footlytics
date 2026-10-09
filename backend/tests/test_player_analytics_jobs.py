@@ -193,7 +193,10 @@ def test_worker_persists_bundle_progress_pagination_and_private_api(
     path = settings.storage_dir / stored.artifact_relative_path
     assert {p.name for p in path.iterdir()} == {f"{name}.csv" for name in MODELS}
     assert not list(settings.storage_dir.rglob("*.partial"))
-    assert stored.analytics_summary["valid_intervals"] == 2
+    # Track 7's 0.1 s and 0.2 s steps form one 0.3 s speed-window measurement.
+    assert stored.analytics_summary["valid_intervals"] == 1
+    assert stored.analytics_summary["speed_window_seconds"] == 0.2
+    assert stored.analytics_summary["method"] == "minimum_time_windows_v2"
     assert stored.analytics_summary["unique_tracks"] == 2
     assert [
         call.kwargs["progress_percent"]
@@ -204,6 +207,7 @@ def test_worker_persists_bundle_progress_pagination_and_private_api(
     assert response.status_code == 200, response.text
     data = response.json()
     assert data["total"] == 2 and [r["track_id"] for r in data["items"]] == [3, 7]
+    assert {r["speed_window_seconds"] for r in data["items"]} == {0.2}
     assert data["items"][0]["average_speed_mps"] is None
     assert data["items"][1]["average_speed_mps"] == 0
     assert data["items"][1]["active_duration_seconds"] == pytest.approx(0.3)

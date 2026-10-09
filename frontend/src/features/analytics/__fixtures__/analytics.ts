@@ -24,6 +24,7 @@ export const player: PlayerAnalytics = {
   first_timestamp: 0, last_timestamp: 80, segment_count: 2, usable_observation_count: 101, valid_interval_count: 99, excluded_interval_count: 1,
   active_duration_seconds: 65, total_distance_metres: 123.45, average_speed_mps: 123.45 / 65, average_speed_kmh: 123.45 / 65 * 3.6,
   max_speed_mps: 7.5, max_speed_kmh: 27, sprint_count: 2, sprint_distance_metres: 30.5, sprint_duration_seconds: 4.2,
+  speed_window_seconds: 0.2,
 }
 export const players: PlayerAnalytics[] = [player, { ...player, track_id: 17, observed_coverage_percent: 0, coverage_warning: 'No usable observed intervals.', total_distance_metres: 0,
   segment_count: 1, usable_observation_count: 1, valid_interval_count: 0, excluded_interval_count: 0, last_frame: 0, last_timestamp: 0,

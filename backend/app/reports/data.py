@@ -30,6 +30,8 @@ class ReportData:
     sprint_threshold_mps: float | None
     sprint_min_duration_seconds: float | None
     heatmap_limit: int
+    # From the saved analytics summary; 0 means every consecutive observation.
+    speed_window_seconds: float | None = None
 
 
 def read_players(inputs: ReportInputs) -> list[TrackAnalytics] | None:
@@ -87,4 +89,5 @@ def load_report_data(
         summary.sprint_speed_threshold_mps if summary else None,
         summary.sprint_min_duration_seconds if summary else None,
         settings.report_heatmap_limit,
+        summary.speed_window_seconds if summary else None,
     )

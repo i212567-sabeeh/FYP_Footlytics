@@ -5,7 +5,7 @@ import type { Page } from '../football/types'
 import { Field, Pager } from '../football/ui'
 import { CoverageSummary } from './HeatmapPanel'
 import { usePlayerDetail } from './api'
-import { duration, metric } from './format'
+import { duration, metric, speedBasis } from './format'
 import { Metric, ResultState, TeamBadge } from './ResultState'
 import type { PlayerAnalytics, TeamAssignment } from './types'
 
@@ -120,7 +120,8 @@ function PlayerDetail({ matchId, version, trackId, assignments, onHeatmap }: {
       <MetricGroup title="Movement" icon={Footprints}>
         <Metric label="Total distance" value={metric(row.total_distance_metres, 'm')} />
         <Metric label="Active duration" value={duration(row.active_duration_seconds)} hint="Sum of valid observed movement intervals." />
-        <Metric label="Average speed" value={metric(row.average_speed_kmh, 'km/h')} /><Metric label="Maximum speed" value={metric(row.max_speed_kmh, 'km/h')} />
+        <Metric label="Average speed" value={metric(row.average_speed_kmh, 'km/h')} />
+        <Metric label="Maximum speed" value={metric(row.max_speed_kmh, 'km/h')} hint={speedBasis(row.speed_window_seconds)} />
       </MetricGroup>
       <MetricGroup title="Sprints" icon={Zap}>
         <Metric label="Sprint count" value={row.sprint_count} /><Metric label="Sprint distance" value={metric(row.sprint_distance_metres, 'm')} />

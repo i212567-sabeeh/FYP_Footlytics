@@ -110,13 +110,17 @@ def evaluate(
     environment: dict,
 ) -> dict:
     tracking, by_clip = evaluate_tracking(clips, config.tracking_iou)
+    # Boxes below the recorded YOLO_CONFIDENCE are ByteTrack-only candidates.
+    reported = (
+        predictions.pipeline_config.get("yolo_confidence") if predictions else None
+    )
     per_clip = {}
     for clip in clips:
         identifier = clip.clip.clip_id
         per_clip[identifier] = {
             "coverage": coverage(clip),
             "diagnostics": diagnostics(clip),
-            "detection": evaluate_detection([clip], config.detection_iou),
+            "detection": evaluate_detection([clip], config.detection_iou, reported),
             "tracking": by_clip.get(identifier),
             "teams": evaluate_teams([clip], config.association_iou),
             "coordinates": evaluate_coordinates(
@@ -145,7 +149,7 @@ def evaluate(
         "prediction_provenance": predictions.model_dump(mode="json")
         if predictions
         else None,
-        "detection": evaluate_detection(clips, config.detection_iou),
+        "detection": evaluate_detection(clips, config.detection_iou, reported),
         "tracking": tracking,
         "team_classification": evaluate_teams(clips, config.association_iou),
         "coordinates": evaluate_coordinates(

@@ -7,6 +7,7 @@ import { setAccessToken } from '../auth/tokenStorage'
 import type { Role } from '../auth/types'
 import type { ProcessingJob } from '../media/types'
 import * as fixture from './__fixtures__/analytics'
+import { speedBasis } from './format'
 import { HeatmapView } from './HeatmapPanel'
 import { centroidSegments, seriesPoints } from './series'
 import type { TeamAssignment, TrackTeam } from './types'
@@ -173,6 +174,7 @@ describe('player metrics and selection', () => {
       ['Maximum speed', '27.0 km/h'], ['Sprint count', '2'], ['Sprint distance', '30.5 m'], ['Sprint duration', '4.2 s'], ['Segments', '2'], ['Usable observations', '101']]) {
       expectMetric(details, label!, value!)
     }
+    expect(details.getByText('Fastest movement window of at least 0.2 s, not an instantaneous peak.')).toBeVisible()
     let finish!: (response: Response) => void
     fetchMock.mockImplementation((input, options) => String(input).endsWith('/player-analytics/17')
       ? new Promise((resolve) => { finish = resolve }) : defaultApi(input, options))
@@ -567,6 +569,18 @@ describe('pitch visualisations', () => {
     expect(centroidSegments(fixture.seriesA).map((segment) => segment.map((point) => point.frame))).toEqual([[0], [60, 90]])
     expect(centroidSegments([{ ...fixture.snapshot, frame_number: 60 }, { ...fixture.snapshot, centroid_y: null, frame_number: 30 }, fixture.snapshot])
       .map((segment) => segment.map((point) => [point.frame, point.x, point.y]))).toEqual([[[0, 14.25, 8.5]], [[60, 14.25, 8.5]]])
+  })
+  it('never bridges frames that have no observation at all', () => {
+    const at = (frame_number: number) => ({ ...fixture.snapshot, frame_number })
+    // Cadence 5: frame 15 has no row, so frames 10 and 20 are not connected.
+    expect(centroidSegments([0, 5, 10, 20, 25].map(at)).map((segment) => segment.map((point) => point.frame)))
+      .toEqual([[0, 5, 10], [20, 25]])
+    expect(centroidSegments([0, 1, 2].map(at))).toHaveLength(1)
+  })
+  it('states how maximum speed was measured', () => {
+    expect(speedBasis(0.2)).toBe('Fastest movement window of at least 0.2 s, not an instantaneous peak.')
+    expect(speedBasis(0)).toBe('Fastest interval between consecutive observations.')
+    expect(speedBasis(undefined)).toBeUndefined()
   })
   it('draws each team centroid path for the loaded series window on the match pitch', async () => {
     renderPage(); await openTab('Team Tactics')

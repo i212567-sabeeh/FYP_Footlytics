@@ -142,6 +142,20 @@ def test_ap50_known_ranked_predictions_and_missing_recall():
     assert average_precision([clip_data([], [])]) is None
 
 
+def test_tracking_only_candidates_are_not_scored_as_reported_detections():
+    # The 0.15 box is a ByteTrack low-score candidate (below YOLO_CONFIDENCE).
+    gt = [observation()]
+    pred = [observation(confidence=0.9), observation(identity="2", confidence=0.15)]
+    every_box = evaluate_detection([clip_data(gt, pred)])
+    assert (every_box["tp"], every_box["fp"], every_box["precision"]) == (1, 1, 0.5)
+    result = evaluate_detection([clip_data(gt, pred)], reported_confidence=0.25)
+    assert (result["tp"], result["fp"], result["fn"]) == (1, 0, 0)
+    assert result["precision"] == result["recall"] == result["ap50"] == 1
+    assert result["predicted_boxes"] == 1
+    assert result["excluded_tracking_candidates"] == 1
+    assert result["reported_confidence_threshold"] == 0.25
+
+
 def test_tracking_standard_metrics_for_switch():
     gt = [observation(frame=i) for i in range(3)]
     pred = [observation(frame=i, identity="10" if i < 2 else "11") for i in range(3)]

@@ -414,6 +414,17 @@ def build_report(data: ReportData, path: Path) -> list[str]:
                 "These thresholds are configurable."
             )
         )
+    if data.speed_window_seconds is not None:
+        story.append(
+            p(
+                "Distance and speeds use straight-line displacement over movement "
+                f"windows of at least {data.speed_window_seconds:g} s; maximum speed "
+                "is the fastest such window, not an instantaneous peak."
+                if data.speed_window_seconds
+                else "Distance and speeds use every consecutive observation pair; "
+                "maximum speed is the fastest such interval."
+            )
+        )
     for limitation in [
         "Track IDs are Match-specific and are not automatically named roster players.",
         "Occlusion and visibility changes can cause tracking errors and ID switches.",

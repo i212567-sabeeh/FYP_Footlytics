@@ -148,6 +148,10 @@ def _analyze(session: Session, job_id: int, attempt: int, settings: Settings) ->
             max_gap_seconds=source.summary.max_gap_seconds,
             heatmap_bins_x=settings.player_heatmap_bins_x,
             heatmap_bins_y=settings.player_heatmap_bins_y,
+            speed_window_seconds=settings.player_speed_window_seconds,
+            method="minimum_time_windows_v2"
+            if settings.player_speed_window_seconds
+            else "consecutive_clean_intervals_v1",
         )
         _running(session, job_id, attempt, current_stage="saving_analytics")
         session.execute(

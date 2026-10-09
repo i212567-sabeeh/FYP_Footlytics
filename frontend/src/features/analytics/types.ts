@@ -47,6 +47,8 @@ export interface PlayerAnalytics extends ObservationCoverage {
   sprint_count: number
   sprint_distance_metres: number
   sprint_duration_seconds: number
+  /** Minimum duration of one movement measurement; 0 means every consecutive observation. */
+  speed_window_seconds?: number
 }
 
 export interface HeatmapCell {

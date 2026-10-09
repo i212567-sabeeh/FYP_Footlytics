@@ -186,6 +186,7 @@ def list_players(
                 **observation_coverage(
                     row.active_duration_seconds, source.video_duration_seconds
                 ),
+                speed_window_seconds=source.summary.speed_window_seconds,
             )
             for row in islice(rows, offset, offset + limit)
         ]
@@ -215,6 +216,7 @@ def get_player(
         **observation_coverage(
             track.active_duration_seconds, source.video_duration_seconds
         ),
+        speed_window_seconds=source.summary.speed_window_seconds,
     )
 
 
