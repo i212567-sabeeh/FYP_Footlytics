@@ -276,8 +276,8 @@ def build_report(data: ReportData, path: Path) -> list[str]:
     )
     story.append(
         p(
-            "A dash (—) means unavailable. Zero distance can legitimately indicate "
-            "no usable movement interval."
+            "A dash (—) means unavailable, including distance and sprints for "
+            "tracks without a measured movement window."
         )
     )
     if data.players is None:
@@ -301,13 +301,28 @@ def build_report(data: ReportData, path: Path) -> list[str]:
                 [
                     f"Track {row.track_id}",
                     team_label(data.assignments, row.track_id),
-                    number(row.total_distance_metres),
-                    duration(row.active_duration_seconds),
-                    number(row.average_speed_kmh, missing="—"),
-                    number(row.max_speed_kmh, missing="—"),
-                    str(row.sprint_count),
-                    number(row.sprint_distance_metres),
-                    duration(row.sprint_duration_seconds),
+                    *(
+                        [
+                            number(row.total_distance_metres),
+                            duration(row.active_duration_seconds),
+                            number(row.average_speed_kmh, missing="—"),
+                            number(row.max_speed_kmh, missing="—"),
+                            str(row.sprint_count),
+                            number(row.sprint_distance_metres),
+                            duration(row.sprint_duration_seconds),
+                        ]
+                        if row.valid_interval_count
+                        # No measured movement window: zeros are not measurements.
+                        else [
+                            "—",
+                            duration(row.active_duration_seconds),
+                            "—",
+                            "—",
+                            "—",
+                            "—",
+                            "—",
+                        ]
+                    ),
                 ]
                 for row in data.players
             ],

@@ -27,6 +27,7 @@ import numpy as np
 
 from app.cv.homography import transform_points
 
+
 # FIFA standard markings (metres), X along the length and Y across the width.
 def landmarks(length: float, width: float) -> dict[str, tuple[float, float]]:
     y = width / 2

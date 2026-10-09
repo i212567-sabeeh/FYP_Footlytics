@@ -16,7 +16,10 @@ are in [KPI_QUALITY_REPORT.md](KPI_QUALITY_REPORT.md).
   No diagnostic is an accuracy score, and no measurement here has been validated
   against independent football ground truth (see each "Validation" entry).
 - **Unavailable** values are `null` in the API and "—" or "Unavailable" in the UI,
-  PDF and CSV; they are never written as zero.
+  PDF and CSV. One schema-fixed exception: a track with no measured movement
+  window has `total_distance_metres` and sprint totals of 0 together with
+  `active_duration_seconds` 0 and `valid_interval_count` 0 in the API and CSV; the
+  UI and PDF show these as unavailable rather than as a measured zero.
 - Defaults below are the deployed configuration: `.env` overrides only
   `YOLO_MODEL`, `YOLO_CONFIDENCE=0.25` and `DEVICE=auto`.
 

@@ -82,6 +82,30 @@ def test_pdf_content_nulls_units_safe_markup_and_determinism(tmp_path, report_da
     )
 
 
+def test_unmeasured_movement_is_a_dash_and_speed_window_is_stated(
+    tmp_path, report_data
+):
+    path = tmp_path / "report.pdf"
+    build_report(replace(report_data, speed_window_seconds=0.2), path)
+    text = "\n".join(page.extract_text() for page in PdfReader(path).pages)
+    # Track 2 has no measured movement window: no zero distance or sprint count.
+    # Extracted table cells are one per line, in column order.
+    lines = text.splitlines()
+    start = lines.index("Track 2")
+    assert lines[start + 1 : start + 9] == [
+        "Team B",
+        "—",
+        "0:00.0",
+        "—",
+        "—",
+        "—",
+        "—",
+        "—",
+    ]
+    assert "windows of at least 0.2 s" in text.replace("\n", " ")
+    assert "not an instantaneous peak" in text.replace("\n", " ")
+
+
 def test_many_tracks_paginate_and_repeat_headers(tmp_path, report_data):
     path = tmp_path / "many.pdf"
     build_report(replace(report_data, players=[player(i) for i in range(1, 181)]), path)

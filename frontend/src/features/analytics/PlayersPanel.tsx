@@ -5,7 +5,7 @@ import type { Page } from '../football/types'
 import { Field, Pager } from '../football/ui'
 import { CoverageSummary } from './HeatmapPanel'
 import { usePlayerDetail } from './api'
-import { duration, metric, speedBasis } from './format'
+import { duration, metric, movement, speedBasis } from './format'
 import { Metric, ResultState, TeamBadge } from './ResultState'
 import type { PlayerAnalytics, TeamAssignment } from './types'
 
@@ -70,13 +70,13 @@ export function PlayersPanel({ matchId, version, query, assignments, offset, onO
                   aria-label={`View Track ${row.track_id}`} aria-pressed={active} onClick={() => select(row.track_id)}>Track {row.track_id}</button>
               </th>
               <td><TeamBadge trackId={row.track_id} assignments={assignments} /></td>
-              <td className="text-right"><Value text={metric(row.total_distance_metres, 'm')} /></td>
+              <td className="text-right"><Value text={metric(movement(row.total_distance_metres, row), 'm')} /></td>
               <td className="text-right"><Value text={duration(row.active_duration_seconds)} />{row.coverage_warning && <span className="mt-1 flex items-center justify-end gap-1 text-xs text-amber-200" title={row.coverage_warning}>
                 <TriangleAlert aria-hidden="true" className="size-3 shrink-0" />Partial observation</span>}</td>
               <td className="text-right"><Value text={metric(row.average_speed_kmh, 'km/h')} /></td>
               <td className="text-right"><Value text={metric(row.max_speed_kmh, 'km/h')} /></td>
-              <td className="text-right">{row.sprint_count}</td>
-              <td className="text-right"><Value text={metric(row.sprint_distance_metres, 'm')} /></td>
+              <td className="text-right"><Value text={row.valid_interval_count ? String(row.sprint_count) : 'Unavailable'} /></td>
+              <td className="text-right"><Value text={metric(movement(row.sprint_distance_metres, row), 'm')} /></td>
             </tr>
           })}</tbody></table>
         </div>}
@@ -118,14 +118,14 @@ function PlayerDetail({ matchId, version, trackId, assignments, onHeatmap }: {
       </div>
       <CoverageSummary observed={row.active_duration_seconds} data={row} />
       <MetricGroup title="Movement" icon={Footprints}>
-        <Metric label="Total distance" value={metric(row.total_distance_metres, 'm')} />
+        <Metric label="Total distance" value={metric(movement(row.total_distance_metres, row), 'm')} />
         <Metric label="Active duration" value={duration(row.active_duration_seconds)} hint="Sum of valid observed movement intervals." />
         <Metric label="Average speed" value={metric(row.average_speed_kmh, 'km/h')} />
         <Metric label="Maximum speed" value={metric(row.max_speed_kmh, 'km/h')} hint={speedBasis(row.speed_window_seconds)} />
       </MetricGroup>
       <MetricGroup title="Sprints" icon={Zap}>
-        <Metric label="Sprint count" value={row.sprint_count} /><Metric label="Sprint distance" value={metric(row.sprint_distance_metres, 'm')} />
-        <Metric label="Sprint duration" value={metric(row.sprint_duration_seconds, 's')} />
+        <Metric label="Sprint count" value={row.valid_interval_count ? row.sprint_count : 'Unavailable'} /><Metric label="Sprint distance" value={metric(movement(row.sprint_distance_metres, row), 'm')} />
+        <Metric label="Sprint duration" value={metric(movement(row.sprint_duration_seconds, row), 's')} />
       </MetricGroup>
       <MetricGroup title="Observation quality" icon={ListChecks}>
         <Metric label="Segments" value={row.segment_count} /><Metric label="Usable observations" value={row.usable_observation_count} />

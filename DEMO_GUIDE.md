@@ -96,7 +96,10 @@ YOLO detects people. ByteTrack associates saved image-coordinate detections acro
 frames. The bounding-box **bottom centre** estimates ground contact. Homography
 maps that point to each match's pitch dimensions in metres. Cleaning flags invalid
 positions and implausible continuity while retaining raw evidence. Physical
-metrics use usable cleaned intervals; tactical metrics summarize visible assigned
+metrics use usable cleaned movement windows of at least 0.2 s, because a single
+25 FPS step is mostly bounding-box jitter (per-frame measurement added 21% to
+distance and doubled maximum speeds on the real clip); maximum speed is therefore
+a 0.2 s average, not an instantaneous peak. Tactical metrics summarize visible assigned
 team geometry. Unknown assignments and unavailable data remain explicit. Normal
 reports do not contain invented match narratives or hidden ground-truth metrics.
 
@@ -111,7 +114,9 @@ coverage. Full provenance and metrics are linked in README.
 
 - Static planar homography does not compensate for camera pan, zoom or movement.
 - No independent coordinate-accuracy benchmark was established. A calibration
-  fitting residual is not held-out metre accuracy.
+  fitting residual is not held-out metre accuracy: on the development panorama,
+  unfitted pitch markings were 0.9–4.4 m off (mean 2.1 m) although the four-corner
+  residual is effectively zero. Calibrate with eight or more spread markings.
 - Automatic jersey classification coverage was poor on SoccerNet; explicit manual
   correction is useful but is separate from automatic evaluation.
 - CPU processing is not real time. Occlusion/ID switches affect track continuity.
@@ -138,9 +143,11 @@ save prototypes, then queue classification. It uses saved tracks and video crops
 no new detection job is needed. Manual overrides remain authoritative.
 
 Explain the limits while showing heatmaps: fragment coverage is relative to the
-source video, gaps add no occupancy, and stitching was not adopted. The controlled
-full-frame experiment classified only 3/251 tracks using seeded white examples;
-no blue track met the unchanged repeated-evidence requirement.
+source video, gaps add no occupancy, and stitching was not adopted. The hardening
+experiment classified only 3/251 tracks with the seeded examples; with the KPI
+branch's separable-vote rule the same seeds classify 29/251 (9 blue, 20 white,
+all visually correct). The rest are mostly tracks too short for three votes. On
+SoccerNet-GSR seeded mode labelled 28 of 49 identities with 27 correct.
 
 The development five-minute results were made stale by older duplicate preparation
 jobs changing the video's update timestamp. They were preserved, not relabelled as

@@ -666,3 +666,20 @@ CV/analytics calculations and the backend are unchanged.
   CV verification.
 - Stage record, checkpoint log and verification results:
   [docs/UI_REDESIGN.md](docs/UI_REDESIGN.md).
+
+## KPI quality (post-core, branch `feature/kpi-quality`)
+
+**Status: implemented on `feature/kpi-quality` (branched from the UI redesign);
+awaiting owner review before any merge.** Inventory in
+[docs/KPI_CATALOG.md](docs/KPI_CATALOG.md); findings, measurements and rejected
+experiments in [docs/KPI_QUALITY_REPORT.md](docs/KPI_QUALITY_REPORT.md).
+
+- Movement KPIs use 0.2 s movement windows (`PLAYER_SPEED_WINDOW_SECONDS`) instead
+  of single-frame steps, removing jitter inflation of distance, speed and sprints.
+- Detection evaluation scores only reported detections, not tracking candidates.
+- User-seeded team classification uses separable per-crop votes
+  (SoccerNet-GSR coverage 6% → 57%, 96% correct among classified).
+- UI/PDF show unmeasured movement as unavailable; centroid paths do not bridge
+  unobserved frames.
+- Measured but not adopted: larger YOLO inference size, ByteTrack threshold
+  changes, automatic-mode voting. Calibration held-out check documented.

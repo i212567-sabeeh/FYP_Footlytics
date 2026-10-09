@@ -425,6 +425,12 @@ Club Management is read-only. The worker uses existing tracks and real selected
 video crops; it does not rerun YOLO. Changing tracking invalidates saved examples.
 Classification records automatic/user-seeded mode and sample provenance. Manual
 per-track overrides take precedence. Weak or conflicting evidence remains Unknown.
+In user-seeded mode (`seeded_separable_votes_v2`), a sampled crop votes for a kit
+only when it is at most half as far from that kit's colour as from the other,
+within 25 Lab units, and at least half its torso pixels share the dominant colour;
+a track needs three votes and none for the other team. On SoccerNet-GSR this
+classified 28 of 49 labelled identities (27 correct) instead of 3; automatic mode
+is unchanged ([KPI quality report](docs/KPI_QUALITY_REPORT.md#5-team-classification-gt-qualitative)).
 
 Player details and heatmaps now show observed/video duration, coverage, and short
 fragment/low-coverage warnings. These describe visible usable intervals, not full
@@ -1078,13 +1084,22 @@ and physical-plausibility limits. **A rejected observation breaks continuity eve
 when usable observations on both sides share a segment.** Segment boundaries,
 non-positive time differences and invalid intervals contribute no movement or time.
 
-- Interval distance is `sqrt(dx² + dy²)` metres between cleaned positions. Total
-  distance is the sum of valid interval distances.
-- Active duration is the sum of valid interval `dt`, using actual timestamps and
+Movement is measured over **windows of at least `PLAYER_SPEED_WINDOW_SECONDS`
+(0.2 s)** inside such a continuous run: one measurement spans from a window's
+first to its last observation, a run's remainder extends its last window, and a
+run shorter than the window gives no measurement. Single 25 FPS frames are
+dominated by bounding-box jitter: on the real 60-second clip, per-frame steps
+added 21% to distance and doubled maximum speeds compared with the same tracks at
+5 Hz ([KPI quality report](docs/KPI_QUALITY_REPORT.md)). Sampling of 0.2 s or
+coarser is unaffected; `0` restores every-consecutive-pair measurement.
+
+- Interval distance is `sqrt(dx² + dy²)` metres between the cleaned positions at
+  the two ends of a movement window. Total distance is the sum of these distances.
+- Active duration is the sum of window durations, using actual timestamps and
   irregular sampling. It is never the last timestamp minus the first.
-- Average speed is total distance / active duration. Maximum speed is the largest
-  valid interval distance / `dt`. Both expose m/s and km/h (`m/s × 3.6`). P95 is
-  not implemented.
+- Average speed is total distance / active duration. Maximum speed is the fastest
+  movement window (a ≥ 0.2 s average, not an instantaneous peak). Both expose m/s
+  and km/h (`m/s × 3.6`). P95 is not implemented.
 - Empty, rejected-only and single-observation tracks have zero observed distance,
   duration and sprint counts; average and maximum speeds are null when no valid
   interval exists. A valid stationary interval has positive duration and zero
@@ -1095,6 +1110,7 @@ non-positive time differences and invalid intervals contribute no movement or ti
 | --- | --- | --- |
 | `PLAYER_SPRINT_SPEED_THRESHOLD_MPS` | 7.0 | Inclusive sprint speed threshold; methodology-dependent |
 | `PLAYER_SPRINT_MIN_DURATION_SECONDS` | 1.0 | Minimum summed duration of continuous qualifying intervals |
+| `PLAYER_SPEED_WINDOW_SECONDS` | 0.2 | Minimum duration of one movement measurement; 0 = every consecutive pair (results saved before this setting) |
 | `PLAYER_HEATMAP_BINS_X` | 20 | Grid columns along the Match's pitch length |
 | `PLAYER_HEATMAP_BINS_Y` | 12 | Grid rows along the Match's pitch width |
 
@@ -1502,6 +1518,15 @@ The QA clip is a controlled still frame, so this shows integration and
 repeatability, not motion or coordinate accuracy. Details:
 [docs/UI_REDESIGN.md](docs/UI_REDESIGN.md).
 
+KPI quality verification (branch `feature/kpi-quality`): **1,232 backend tests
+passed** (733 seconds),
+**245 frontend tests passed** in two consecutive runs, ESLint/TypeScript/build,
+Ruff/format and the single Alembic head passed; the browser sweep passed
+**178/178** and an isolated end-to-end run reproduced the saved results. Every KPI
+is catalogued in [docs/KPI_CATALOG.md](docs/KPI_CATALOG.md); measured changes,
+rejected experiments and limitations are in
+[docs/KPI_QUALITY_REPORT.md](docs/KPI_QUALITY_REPORT.md).
+
 Use the activated WSL environment. From the repository root:
 
 ```bash
@@ -1560,10 +1585,15 @@ Never present a controlled stationary QA clip as real player movement evidence.
 - Static planar homography assumes a fixed camera and valid landmarks. Broadcast
   pans/zooms invalidate that assumption. Coordinate accuracy has **not** been
   independently benchmarked; four-point fitting residual is not validation error.
+  A held-out spot check on the development panorama found unfitted pitch markings
+  0.9–4.4 m off (mean 2.1 m), so positions and speeds are metre-level
+  approximations ([KPI quality report](docs/KPI_QUALITY_REPORT.md#7-coordinate-validation-math-gt-like-spot-check)).
 - SoccerNet evaluation covers 18 seconds from three broadcast 11v11 games. It does
   not establish broad 5v5, user-footage or full-match performance. Automatic jersey
   coverage was only **6.12%**; **46/49 identities were Unknown**. Manual corrections
-  are explicit user inputs, separate from automatic evaluation.
+  are explicit user inputs, separate from automatic evaluation. User-seeded colours
+  (three labelled crops per team) now classify **28/49** identities with **27**
+  correct; automatic mode is unchanged and remains conservative.
 - CPU processing is supported but is not real time. Occlusion and identity
   switches remain; track IDs are match-specific and are not linked to named
   Player accounts. Analytics describe observed, cleaned movement/visible geometry.

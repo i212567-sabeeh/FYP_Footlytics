@@ -151,7 +151,9 @@ describe('player metrics and selection', () => {
     expect(row3.getByText('30.5 m')).toBeVisible()
     expect(row3.getByText('Team A')).toBeVisible()
     const row17 = within(screen.getByRole('button', { name: 'View Track 17' }).closest('tr')!)
-    expect(row17.getAllByText('Unavailable')).toHaveLength(2)
+    // No measured movement window: distance, both speeds, sprints and sprint distance.
+    expect(row17.getAllByText('Unavailable')).toHaveLength(5)
+    expect(row17.queryByText('0.0 m')).not.toBeInTheDocument()
     expect(row17.getByText('Unknown')).toBeVisible()
   })
   it('sorts the current page without changing backend metrics and leaves nulls last', async () => {
@@ -184,7 +186,10 @@ describe('player metrics and selection', () => {
     expect(panel('Track 17 details').queryByText('123.5 m')).not.toBeInTheDocument()
     finish(json(fixture.players[1]))
     await screen.findByRole('button', { name: 'View Track 17 heatmap' })
-    expectMetric(panel('Track 17 details'), 'Total distance', '0.0 m')
+    // Track 17 has no measured movement window: its API zeros are not measurements.
+    for (const label of ['Total distance', 'Sprint count', 'Sprint distance', 'Sprint duration']) {
+      expectMetric(panel('Track 17 details'), label, 'Unavailable')
+    }
     expect(requests(/\/player-analytics\/17$/)).toHaveLength(1)
   })
   it('does not reuse a previous match or selected track on navigation', async () => {

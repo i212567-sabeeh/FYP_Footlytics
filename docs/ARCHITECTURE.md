@@ -82,12 +82,17 @@ a static calibration invalid; independent coordinate accuracy is unverified.
 
 Physical analytics consume Phase 10 usable cleaned trajectories. Consecutive
 observations must belong to the same track/segment with a valid positive time
-interval. Distance sums Euclidean steps; active duration sums those intervals;
-average speed is total distance / active duration and remains null without time.
-Sprint events combine consecutive intervals at or above the configured threshold
+interval. Movement is measured over windows of at least
+`PLAYER_SPEED_WINDOW_SECONDS` (0.2 s) inside such a run, because single-frame
+steps are dominated by bounding-box jitter; runs shorter than a window are not
+measured. Distance sums the Euclidean displacement of each window; active
+duration sums window durations; average speed is total distance / active
+duration and remains null without time; maximum speed is the fastest window.
+Sprint events combine consecutive windows at or above the configured threshold
 (default 7 m/s) and must meet the configured duration (default 1 second). Gaps do
-not create movement or duration. Heatmaps accumulate interval time in the starting
+not create movement or duration. Heatmaps accumulate window time in the starting
 position's backend bin; the browser displays the produced cells and units.
+Measured evidence: [KPI quality report](KPI_QUALITY_REPORT.md).
 
 Tactics group usable positions by frame and effective team, excluding Unknown.
 Centroid is mean X/Y; width is Y range and depth is X range. Compactness is mean
@@ -176,6 +181,9 @@ that set at enqueue/retry, check it before processing/publication, and publish
 sample counts, margins and rejection reasons without storage paths. New valid-crop
 budgets are spread across a track's lifetime; at least three consistent actual
 samples are required. Confident evidence for both teams keeps the track Unknown.
+A seeded crop counts as evidence only when it is clearly closer to one kit (at
+most half the distance to the other prototype), within 25 Lab units and mostly
+one colour; ambiguous, distant or background-heavy crops abstain.
 Saving colors alone does not rewrite existing assignments; queued classification
 must complete, and effective-team changes invalidate dependent tactics/reports.
 

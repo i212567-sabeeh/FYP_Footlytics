@@ -396,6 +396,25 @@ def test_windowed_sprint_needs_one_second_of_qualifying_windows(
         assert not output["sprints"] and row.sprint_duration_seconds == 0
 
 
+def test_windowed_heatmap_assigns_each_window_to_its_start_cell(settings):
+    # 5 m/s across the X = 5 m cell boundary (100 x 50 m pitch, 20 x 12 bins).
+    points = frames_at_25([(4.0 + 0.2 * k, 10) for k in range(8)])
+    per_pair, _, _ = calculate(points, settings, player_speed_window_seconds=0)
+    windowed, _, _ = calculate(points, settings)
+    # Per pair: frames 0-4 start in cell 0 (5 x 0.04 s), frames 5-6 in cell 1.
+    assert [
+        (c.x_bin, c.y_bin, round(c.occupancy_seconds, 6)) for c in per_pair["heatmaps"]
+    ] == [
+        (0, 2, 0.2),
+        (1, 2, 0.08),
+    ]
+    # One 0.28 s window (frames 0-7) starts at x = 4.0, so all time is in cell 0.
+    assert [
+        (c.x_bin, c.y_bin, round(c.occupancy_seconds, 6)) for c in windowed["heatmaps"]
+    ] == [(0, 2, 0.28)]
+    assert windowed["heatmaps"][0].occupancy_fraction == pytest.approx(1)
+
+
 def test_speed_window_never_spans_a_rejected_observation(settings):
     # Frames 0-6 (0.24 s) and 8-14 (0.24 s) move at 5 m/s; frame 7 is rejected.
     before = frames_at_25([(10 + 0.2 * k, 5) for k in range(7)])
