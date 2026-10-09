@@ -30,7 +30,7 @@ missing or stale results stay "Unavailable", "Not generated" or "Needs regenerat
 | 6 | Detection & tracking review workspace and frame navigation | 44630b8 |
 | 7 | Pitch visualisations, calibration workspace, heatmap, centroid paths | b731f18 |
 | 8 | Authentication, users, access requests, clubs, teams, players, squads | 729797c |
-| 9 | Final QA, accessibility and performance fixes, documentation, end-to-end verification | latest branch commit |
+| 9 | Final QA, accessibility and performance fixes, documentation, end-to-end verification | 2cee1ce, d8c70fd |
 
 ## Checkpoint log
 
@@ -55,7 +55,9 @@ missing or stale results stay "Unavailable", "Not generated" or "Needs regenerat
   link list scrolls on short landscape screens instead of hiding behind the
   account area; React, React Router and TanStack Query share a `vendor` chunk so no
   chunk exceeds 500 kB; README, DEMO_GUIDE, ARCHITECTURE and IMPLEMENTATION_PLAN
-  updated. Results below.
+  updated; 2cee1ce. d8c70fd restored the original CRLF endings of four files that
+  Stages 1–4 had rewritten with LF, so the branch diff against `main` contains no
+  line-ending-only changes. Results below.
 
 ## Final verification (Stage 9)
 
